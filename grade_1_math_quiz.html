@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 1 Math Quiz</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            background: #e0e4e8; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 0; 
+            margin: 0;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .quiz-container { 
+            width: 100%; 
+            max-width: 900px; 
+            height: 96vh;
+            position: relative; 
+            background: #fff;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2); 
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        /* Fixed Frame Pagination System */
+        .page { 
+            display: none; 
+            height: 100%; 
+            width: 100%; 
+            padding: 30px 40px 90px 40px; 
+            overflow-y: auto; 
+            position: relative;
+        }
+        .page.active { display: block; }
+        
+        /* Centering Containers */
+        .page > h2, .page > div, .page > ul, .page > table {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 820px;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: #f8f9fa;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 10;
+        }
+        .nav-btn {
+            padding: 10px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+            background: #0066cc;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-btn:hover { background: #004c99; }
+        .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .submit-btn { background: #28a745; }
+        .submit-btn:hover { background: #218838; }
+        .page-indicator { font-weight: bold; font-size: 1.1em; color: #555; }
+
+        h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px dashed #ccc; padding-bottom: 10px; margin-bottom: 30px;}
+        
+        /* Grids (Centered Items) */
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 30px 15px; justify-items: center; width: 100%;}
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 10px; justify-items: center; width: 100%;}
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; justify-items: center; width: 100%;}
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; justify-items: center; width: 100%;}
+        
+        /* Vertical Math */
+        .vertical-math { 
+            display: inline-flex; flex-direction: column; align-items: flex-end; 
+            font-size: 1.5em; width: 65px; font-family: 'Courier New', Courier, monospace; font-weight: bold;
+            position: relative; margin: 0 auto;
+        }
+        .vertical-math .top-num { padding-right: 5px; }
+        .vertical-math .bottom-row { border-bottom: 2px solid #000; width: 100%; display: flex; justify-content: space-between; padding-bottom: 2px;}
+        .vertical-math input { 
+            width: 100%; text-align: right; border: none; font-size: 1em; padding: 5px 5px 0 0; 
+            font-family: inherit; font-weight: bold; outline: none; background: #f9f9f9;
+        }
+        .vertical-math input:focus { background: #e6f2ff; }
+
+        /* Standard Inputs */
+        input[type="text"], input[type="number"] { 
+            font-size: 1.1em; text-align: center; border: 1px solid #aaa; border-radius: 4px; padding: 6px; outline: none;
+        }
+        input[type="text"]:focus, input[type="number"]:focus { border-color: #0066cc; box-shadow: 0 0 5px rgba(0,102,204,0.3); }
+        .short-input { width: 60px; margin-left: 10px; border: none !important; border-bottom: 2px solid #333 !important; border-radius: 0 !important; background: transparent !important; }
+        .tiny-input { width: 35px !important; padding: 2px !important; margin: 0 5px !important; border-bottom: 2px solid #333 !important; border-radius: 0 !important; background: transparent !important; border: none;}
+
+        /* Horizontal Math */
+        .horizontal-math { font-size: 1.3em; margin: 15px 0; display: flex; align-items: center; justify-content: center; position: relative; width: 100%; }
+
+        /* Interactive Math Signs */
+        .sign-selector {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 10px; margin: 0 15px; user-select: none; width: 50px; position: relative;
+        }
+        .sign { cursor: pointer; color: #777; padding: 2px 6px; transition: 0.2s; border-radius: 4px; }
+        .sign:hover { background: #eee; color: #222; }
+        .sign.selected { font-weight: bold; color: #000; font-size: 1.3em; background: #e6f2ff; box-shadow: 0 0 4px rgba(0,102,204,0.3);}
+        
+        /* Interactive Circling */
+        .circle-group { margin-top: 40px; }
+        .circle-group h3 { font-size: 1.2em; text-align: center;}
+        .circle-row { display: flex; gap: 10px; margin-bottom: 15px; font-size: 1.2em; align-items: center; justify-content: center; position: relative;}
+        .circle-wrapper { position: relative; display: inline-block; }
+        .circle-num {
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            width: 38px; height: 38px; border-radius: 50%; transition: 0.2s; border: 2px solid transparent; user-select: none;
+        }
+        .circle-num:hover { background: #f0f0f0; }
+        .circle-num.circled { border-color: red; color: red; font-weight: bold; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 1.05em;}
+        th, td { border: 1px solid #444; padding: 8px 4px; text-align: center; position: relative;}
+        th { background: #f0f0f0; }
+
+        /* Lists */
+        .missing-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px 40px; width: 100%; justify-items: center;}
+        .missing-list li { font-size: 1.3em; display: flex; align-items: center; position: relative; white-space: nowrap; }
+        
+        /* Clocks */
+        .clock-container { text-align: center; margin-bottom: 20px; position: relative;}
+        .analog-clock { width: 120px; height: 120px; margin: 0 auto 10px; display: block; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.1)); }
+        
+        /* Matching Section */
+        .match-wrapper { position: relative; background: #f9f9f9; padding: 30px; border-radius: 8px; border: 1px solid #ddd; margin-top: 20px; }
+        .match-col-container { display: flex; justify-content: space-around; position: relative; z-index: 2; }
+        .match-item { display: flex; align-items: center; justify-content: space-between; width: 120px; margin-bottom: 25px; font-size: 1.3em; font-weight: bold; position: relative; }
+        .dot { width: 20px; height: 20px; border-radius: 50%; border: 3px solid #444; background: #fff; cursor: pointer; outline: none; transition: 0.2s; padding: 0; }
+        .dot:hover { background: #e0e0e0; }
+        .dot.active { background: #0066cc; border-color: #0066cc; box-shadow: 0 0 8px rgba(0, 102, 204, 0.6); }
+
+        /* Math Wheels */
+        .wheel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; justify-items: center;}
+        .math-wheel { position: relative; width: 250px; height: 250px; margin: 0 auto; }
+        .math-wheel-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .wheel-center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.6em; font-weight: bold; text-align: center; }
+        .wheel-num { position: absolute; transform: translate(-50%, -50%); font-weight: bold; font-size: 1.4em; }
+        .wheel-input { position: absolute; transform: translate(-50%, -50%); width: 45px; height: 35px; text-align: center; border: 2px solid #aaa; border-radius: 6px; font-size: 1.2em; font-weight: bold; background: #fff; outline: none; transition: 0.2s; z-index: 2; }
+        .wheel-input:focus { border-color: #0066cc; background: #e6f2ff; }
+
+        /* Shapes */
+        .shape-box { text-align: center; background: #fff; padding: 20px 10px; border: 2px solid #ccc; border-radius: 8px; position: relative; width: 100%; max-width: 180px;}
+        .shape-box svg { margin-bottom: 15px; overflow: visible; }
+
+        /* Page Stats & Ticks */
+        .page-stats { margin-top: 40px; padding: 15px; background: #f1f3f5; border-radius: 8px; text-align: center; font-size: 1.1em; border: 1px solid #ddd; clear: both;}
+        .tick { color: #28a745; font-weight: bold; font-size: 1.4em; margin-left: 10px; text-shadow: 0 0 3px #fff; pointer-events: none; z-index: 5;}
+        .cross { color: #dc3545; font-weight: bold; font-size: 1.4em; margin-left: 10px; text-shadow: 0 0 3px #fff; pointer-events: none; z-index: 5;}
+        
+    </style>
+</head>
+<body>
+
+<!-- Reusable SVG Assets for the Analog Clock Face & Hands -->
+<svg width="0" height="0" style="position: absolute;">
+    <defs>
+        <g id="dial-markers">
+            <line x1="50" y1="5" x2="50" y2="12" stroke="#222" stroke-width="2.5" transform="rotate(0 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(30 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(60 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="12" stroke="#222" stroke-width="2.5" transform="rotate(90 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(120 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(150 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="12" stroke="#222" stroke-width="2.5" transform="rotate(180 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(210 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(240 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="12" stroke="#222" stroke-width="2.5" transform="rotate(270 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(300 50 50)"/>
+            <line x1="50" y1="5" x2="50" y2="10" stroke="#222" stroke-width="1.5" transform="rotate(330 50 50)"/>
+        </g>
+        <path id="minute-hand" d="M 48.5 50 L 51.5 50 L 51.5 25 L 54 25 L 50 12 L 46 25 L 48.5 25 Z" fill="#222"/>
+        <path id="hour-hand" d="M 47.5 50 L 52.5 50 L 52.5 33 L 56 33 L 50 20 L 44 33 L 47.5 33 Z" fill="#111"/>
+        <g id="center-pin">
+            <circle cx="50" cy="50" r="4.5" fill="#222"/>
+            <circle cx="50" cy="50" r="2" fill="#ff3333"/>
+        </g>
+    </defs>
+</svg>
+
+<div class="quiz-container">
+
+    <!-- PAGE 1 -->
+    <div class="page active" id="page1">
+        <h2>Addition</h2>
+        <div class="grid-5">
+            <div class="vertical-math"><span class="top-num">1</span><div class="bottom-row"><span>+</span><span>2</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">2</span><div class="bottom-row"><span>+</span><span>3</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">3</span><div class="bottom-row"><span>+</span><span>4</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">4</span><div class="bottom-row"><span>+</span><span>5</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">5</span><div class="bottom-row"><span>+</span><span>6</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">6</span><div class="bottom-row"><span>+</span><span>7</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">7</span><div class="bottom-row"><span>+</span><span>8</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">8</span><div class="bottom-row"><span>+</span><span>9</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">1</span><div class="bottom-row"><span>+</span><span>4</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">2</span><div class="bottom-row"><span>+</span><span>5</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">3</span><div class="bottom-row"><span>+</span><span>6</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">4</span><div class="bottom-row"><span>+</span><span>7</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">5</span><div class="bottom-row"><span>+</span><span>8</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">6</span><div class="bottom-row"><span>+</span><span>9</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">1</span><div class="bottom-row"><span>+</span><span>6</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">2</span><div class="bottom-row"><span>+</span><span>7</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">3</span><div class="bottom-row"><span>+</span><span>8</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">4</span><div class="bottom-row"><span>+</span><span>9</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">1</span><div class="bottom-row"><span>+</span><span>8</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">2</span><div class="bottom-row"><span>+</span><span>9</span></div><input type="text" maxlength="2"></div>
+        </div>
+
+        <div class="circle-group" data-task="even">
+            <h3>Circle even number:</h3>
+            <div class="grid-2">
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">1</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div></div>
+            </div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page" id="page2">
+        <h2>Subtraction</h2>
+        <div class="grid-5">
+            <div class="vertical-math"><span class="top-num">2</span><div class="bottom-row"><span>-</span><span>1</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">3</span><div class="bottom-row"><span>-</span><span>2</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">4</span><div class="bottom-row"><span>-</span><span>3</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">5</span><div class="bottom-row"><span>-</span><span>4</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">6</span><div class="bottom-row"><span>-</span><span>5</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">7</span><div class="bottom-row"><span>-</span><span>6</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">8</span><div class="bottom-row"><span>-</span><span>7</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">9</span><div class="bottom-row"><span>-</span><span>8</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">4</span><div class="bottom-row"><span>-</span><span>1</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">5</span><div class="bottom-row"><span>-</span><span>2</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">6</span><div class="bottom-row"><span>-</span><span>3</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">7</span><div class="bottom-row"><span>-</span><span>4</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">8</span><div class="bottom-row"><span>-</span><span>5</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">9</span><div class="bottom-row"><span>-</span><span>6</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">6</span><div class="bottom-row"><span>-</span><span>1</span></div><input type="text" maxlength="2"></div>
+            
+            <div class="vertical-math"><span class="top-num">7</span><div class="bottom-row"><span>-</span><span>2</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">8</span><div class="bottom-row"><span>-</span><span>3</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">9</span><div class="bottom-row"><span>-</span><span>4</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">8</span><div class="bottom-row"><span>-</span><span>1</span></div><input type="text" maxlength="2"></div>
+            <div class="vertical-math"><span class="top-num">9</span><div class="bottom-row"><span>-</span><span>2</span></div><input type="text" maxlength="2"></div>
+        </div>
+
+        <div class="circle-group" data-task="odd">
+            <h3>Circle odd number:</h3>
+            <div class="grid-2">
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">10</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">1</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">3</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">10</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">5</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">7</span></div></div>
+                <div class="circle-row"><div class="circle-wrapper"><span class="circle-num">6</span></div><div class="circle-wrapper"><span class="circle-num">8</span></div><div class="circle-wrapper"><span class="circle-num">2</span></div><div class="circle-wrapper"><span class="circle-num">9</span></div><div class="circle-wrapper"><span class="circle-num">4</span></div></div>
+            </div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="page" id="page3">
+        <h2>Addition (Horizontal)</h2>
+        <div class="grid-2">
+            <div class="horizontal-math">0 + 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">0 + 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">0 + 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">0 + 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">0 + 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 + 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 + 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 + 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 + 9 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 + 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 + 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 + 8 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 + 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 + 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 + 9 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 + 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 + 8 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 + 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 + 9 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">6 + 8 = <input type="text" class="short-input"></div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 4 -->
+    <div class="page" id="page4">
+        <h2>Subtraction (Horizontal)</h2>
+        <div class="grid-2">
+            <div class="horizontal-math">3 - 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 - 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 - 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">6 - 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">7 - 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">8 - 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">9 - 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">10 - 8 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 - 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">6 - 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">7 - 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">8 - 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">9 - 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">10 - 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">7 - 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">8 - 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">9 - 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">10 - 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">9 - 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">10 - 2 = <input type="text" class="short-input"></div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 5 -->
+    <div class="page" id="page5">
+        <h2>Find no. more than</h2>
+        <div class="grid-2">
+            <div class="horizontal-math">1 more than 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 more than 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 more than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 more than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 more than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 more than 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 more than 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 more than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 more than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 more than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 more than 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 more than 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 more than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 more than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 more than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 more than 1 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 more than 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 more than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 more than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 more than 1 = <input type="text" class="short-input"></div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 6 -->
+    <div class="page" id="page6">
+        <h2>Find no. less than</h2>
+        <div class="grid-2">
+            <div class="horizontal-math">1 less than 2 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 less than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 less than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 less than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">1 less than 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 less than 3 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 less than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 less than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 less than 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">2 less than 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 less than 4 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 less than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 less than 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 less than 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">3 less than 8 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 less than 5 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 less than 6 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 less than 7 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">4 less than 8 = <input type="text" class="short-input"></div>
+            <div class="horizontal-math">5 less than 6 = <input type="text" class="short-input"></div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 7 -->
+    <div class="page" id="page7">
+        <h2>Complete each wheel as shown below.</h2>
+        <div class="wheel-grid">
+            <!-- Wheel 1 (x3) -->
+            <div class="math-wheel">
+                <svg class="math-wheel-svg" viewBox="0 0 250 250">
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(60 125 125)" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(120 125 125)" />
+                    <circle cx="125" cy="125" r="120" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="75" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="35" fill="#fff" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="wheel-center-text">3 x</div>
+                <div class="wheel-num" style="left: 125px; top: 70px;">9</div>
+                <div class="wheel-num" style="left: 172.6px; top: 97.5px;">6</div>
+                <div class="wheel-num" style="left: 172.6px; top: 152.5px;">4</div>
+                <div class="wheel-num" style="left: 125px; top: 180px;">8</div>
+                <div class="wheel-num" style="left: 77.4px; top: 152.5px;">5</div>
+                <div class="wheel-num" style="left: 77.4px; top: 97.5px;">3</div>
+                
+                <input type="text" class="wheel-input" data-ans="27" style="left: 125px; top: 27.5px;">
+                <input type="text" class="wheel-input" data-ans="18" style="left: 209.4px; top: 76.25px;">
+                <input type="text" class="wheel-input" data-ans="12" style="left: 209.4px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="24" style="left: 125px; top: 222.5px;">
+                <input type="text" class="wheel-input" data-ans="15" style="left: 40.6px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="9" style="left: 40.6px; top: 76.25px;">
+            </div>
+
+            <!-- Wheel 2 (x10) -->
+            <div class="math-wheel">
+                <svg class="math-wheel-svg" viewBox="0 0 250 250">
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(60 125 125)" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(120 125 125)" />
+                    <circle cx="125" cy="125" r="120" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="75" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="35" fill="#fff" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="wheel-center-text">10 x</div>
+                <div class="wheel-num" style="left: 125px; top: 70px;">4</div>
+                <div class="wheel-num" style="left: 172.6px; top: 97.5px;">6</div>
+                <div class="wheel-num" style="left: 172.6px; top: 152.5px;">9</div>
+                <div class="wheel-num" style="left: 125px; top: 180px;">5</div>
+                <div class="wheel-num" style="left: 77.4px; top: 152.5px;">7</div>
+                <div class="wheel-num" style="left: 77.4px; top: 97.5px;">8</div>
+                
+                <input type="text" class="wheel-input" data-ans="40" style="left: 125px; top: 27.5px;">
+                <input type="text" class="wheel-input" data-ans="60" style="left: 209.4px; top: 76.25px;">
+                <input type="text" class="wheel-input" data-ans="90" style="left: 209.4px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="50" style="left: 125px; top: 222.5px;">
+                <input type="text" class="wheel-input" data-ans="70" style="left: 40.6px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="80" style="left: 40.6px; top: 76.25px;">
+            </div>
+
+            <!-- Wheel 3 (x5) -->
+            <div class="math-wheel">
+                <svg class="math-wheel-svg" viewBox="0 0 250 250">
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(60 125 125)" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(120 125 125)" />
+                    <circle cx="125" cy="125" r="120" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="75" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="35" fill="#fff" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="wheel-center-text">5 x</div>
+                <div class="wheel-num" style="left: 125px; top: 70px;">3</div>
+                <div class="wheel-num" style="left: 172.6px; top: 97.5px;">2</div>
+                <div class="wheel-num" style="left: 172.6px; top: 152.5px;">1</div>
+                <div class="wheel-num" style="left: 125px; top: 180px;">4</div>
+                <div class="wheel-num" style="left: 77.4px; top: 152.5px;">8</div>
+                <div class="wheel-num" style="left: 77.4px; top: 97.5px;">5</div>
+                
+                <input type="text" class="wheel-input" data-ans="15" style="left: 125px; top: 27.5px;">
+                <input type="text" class="wheel-input" data-ans="10" style="left: 209.4px; top: 76.25px;">
+                <input type="text" class="wheel-input" data-ans="5" style="left: 209.4px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="20" style="left: 125px; top: 222.5px;">
+                <input type="text" class="wheel-input" data-ans="40" style="left: 40.6px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="25" style="left: 40.6px; top: 76.25px;">
+            </div>
+
+            <!-- Wheel 4 (x2) -->
+            <div class="math-wheel">
+                <svg class="math-wheel-svg" viewBox="0 0 250 250">
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(60 125 125)" />
+                    <line x1="5" y1="125" x2="245" y2="125" stroke="#333" stroke-width="2" transform="rotate(120 125 125)" />
+                    <circle cx="125" cy="125" r="120" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="75" fill="none" stroke="#333" stroke-width="2"/>
+                    <circle cx="125" cy="125" r="35" fill="#fff" stroke="#333" stroke-width="2"/>
+                </svg>
+                <div class="wheel-center-text">2 x</div>
+                <div class="wheel-num" style="left: 125px; top: 70px;">5</div>
+                <div class="wheel-num" style="left: 172.6px; top: 97.5px;">8</div>
+                <div class="wheel-num" style="left: 172.6px; top: 152.5px;">6</div>
+                <div class="wheel-num" style="left: 125px; top: 180px;">3</div>
+                <div class="wheel-num" style="left: 77.4px; top: 152.5px;">7</div>
+                <div class="wheel-num" style="left: 77.4px; top: 97.5px;">9</div>
+                
+                <input type="text" class="wheel-input" data-ans="10" style="left: 125px; top: 27.5px;">
+                <input type="text" class="wheel-input" data-ans="16" style="left: 209.4px; top: 76.25px;">
+                <input type="text" class="wheel-input" data-ans="12" style="left: 209.4px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="6" style="left: 125px; top: 222.5px;">
+                <input type="text" class="wheel-input" data-ans="14" style="left: 40.6px; top: 173.75px;">
+                <input type="text" class="wheel-input" data-ans="18" style="left: 40.6px; top: 76.25px;">
+            </div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 8 -->
+    <div class="page" id="page8">
+        <h2>Put proper sign in the box: Greater > Less < </h2>
+        <div class="grid-3">
+            <div class="horizontal-math">15 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 10</div>
+            <div class="horizontal-math">22 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 34</div>
+            <div class="horizontal-math">45 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 41</div>
+            
+            <div class="horizontal-math">19 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 28</div>
+            <div class="horizontal-math">50 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 30</div>
+            <div class="horizontal-math">12 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 18</div>
+            
+            <div class="horizontal-math">33 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 21</div>
+            <div class="horizontal-math">60 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 80</div>
+            <div class="horizontal-math">47 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 40</div>
+            
+            <div class="horizontal-math">88 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 75</div>
+            <div class="horizontal-math">14 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 25</div>
+            <div class="horizontal-math">91 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 89</div>
+            
+            <div class="horizontal-math">37 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 52</div>
+            <div class="horizontal-math">63 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 59</div>
+            <div class="horizontal-math">29 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 39</div>
+            
+            <div class="horizontal-math">81 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 70</div>
+            <div class="horizontal-math">16 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 27</div>
+            <div class="horizontal-math">55 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 49</div>
+            
+            <div class="horizontal-math">95 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 85</div>
+            <div class="horizontal-math">23 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 35</div>
+            <div class="horizontal-math">68 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 58</div>
+            
+            <div class="horizontal-math">74 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 64</div>
+            <div class="horizontal-math">42 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 54</div>
+            <div class="horizontal-math">99 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 90</div>
+            
+            <div class="horizontal-math">31 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 17</div>
+            <div class="horizontal-math">72 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 82</div>
+            <div class="horizontal-math">48 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 38</div>
+            
+            <div class="horizontal-math">86 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 76</div>
+            <div class="horizontal-math">26 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 36</div>
+            <div class="horizontal-math">53 <span class="sign-selector"><span class="sign gt">&gt;</span><span class="sign lt">&lt;</span></span> 43</div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 9 -->
+    <div class="page" id="page9">
+        <h2>Find the smallest and greatest numbers.</h2>
+        <div class="grid-2">
+            <!-- Left Column: Smallest then Greatest -->
+            <table class="minmax-table" data-type="sg">
+                <thead>
+                    <tr>
+                        <th>Numbers</th>
+                        <th>Smallest</th>
+                        <th>Greatest</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>11, 20, 30, 60</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>37, 45, 94, 59</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>33, 11, 14, 40</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>76, 68, 28, 55</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>18, 23, 41, 33</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>28, 10, 16, 36</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>40, 66, 78, 88</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>22, 55, 61, 51</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>26, 56, 45, 15</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>93, 99, 91, 14</td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                </tbody>
+            </table>
+            <!-- Right Column: Greatest then Smallest -->
+            <table class="minmax-table" data-type="gs">
+                <thead>
+                    <tr>
+                        <th>Numbers</th>
+                        <th>Greatest</th>
+                        <th>Smallest</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>19, 85, 52, 42</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>10, 84, 27, 26</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>16, 89, 45, 46</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>67, 31, 52, 56</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>5, 99, 13, 42</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>73, 24, 18, 62</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>88, 11, 99, 22</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>34, 78, 12, 89</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>9, 14, 21, 6</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                    <tr><td>50, 70, 20, 90</td><td><input type="text" class="tiny-input minmax-input" data-minmax="max" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td><td><input type="text" class="tiny-input minmax-input" data-minmax="min" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)"></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 10 -->
+    <div class="page" id="page10">
+        <h2>Fill in the Missing Numbers.</h2>
+        <ul class="missing-list">
+            <li>1) <input type="text" class="tiny-input" data-ans="27">, <input type="text" class="tiny-input" data-ans="28">, 29, 30, 31</li>
+            <li>2) 19, 20, 21, <input type="text" class="tiny-input" data-ans="22">, <input type="text" class="tiny-input" data-ans="23"></li>
+            <li>3) <input type="text" class="tiny-input" data-ans="32">, <input type="text" class="tiny-input" data-ans="34">, 36, 38, 40</li>
+            <li>4) 45, 46, 47, <input type="text" class="tiny-input" data-ans="48">, <input type="text" class="tiny-input" data-ans="49"></li>
+            <li>5) <input type="text" class="tiny-input" data-ans="77">, <input type="text" class="tiny-input" data-ans="78">, 79, 80, 81</li>
+            <li>6) 87, 89, 91, <input type="text" class="tiny-input" data-ans="93">, <input type="text" class="tiny-input" data-ans="95"></li>
+            <li>7) <input type="text" class="tiny-input" data-ans="63">, <input type="text" class="tiny-input" data-ans="64">, 65, 66, 67</li>
+            <li>8) 41, 42, 43, <input type="text" class="tiny-input" data-ans="44">, <input type="text" class="tiny-input" data-ans="45"></li>
+            <li>9) <input type="text" class="tiny-input" data-ans="28">, <input type="text" class="tiny-input" data-ans="30">, 32, 34, 36</li>
+            <li>10) 21, 22, 23, <input type="text" class="tiny-input" data-ans="24">, <input type="text" class="tiny-input" data-ans="25"></li>
+            <li>11) <input type="text" class="tiny-input" data-ans="76">, <input type="text" class="tiny-input" data-ans="75">, 74, 73, 72</li>
+            <li>12) 24, 26, 28, <input type="text" class="tiny-input" data-ans="30">, <input type="text" class="tiny-input" data-ans="32"></li>
+            <li>13) <input type="text" class="tiny-input" data-ans="67">, <input type="text" class="tiny-input" data-ans="68">, 69, 70, 71</li>
+            <li>14) 52, 53, 54, <input type="text" class="tiny-input" data-ans="55">, <input type="text" class="tiny-input" data-ans="56"></li>
+            <li>15) <input type="text" class="tiny-input" data-ans="34">, <input type="text" class="tiny-input" data-ans="36">, 38, 40, 42</li>
+        </ul>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 11 -->
+    <div class="page" id="page11">
+        <h2>Write the time (9 marks)</h2>
+        <div class="grid-3" id="clock-grid">
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(180 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="6"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(270 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="9"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(120 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="4"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(300 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="10"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(60 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="2"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(240 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="8"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(0 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="12"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(90 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="3"> 'o' clock</div></div>
+            <div class="clock-container"><svg viewBox="0 0 100 100" class="analog-clock"><circle cx="50" cy="50" r="45" fill="#fff" stroke="#222" stroke-width="4"/><use href="#dial-markers" /><use href="#minute-hand" /><use href="#hour-hand" transform="rotate(210 50 50)" /><use href="#center-pin" /></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="text" class="short-input" data-ans="7"> 'o' clock</div></div>
+        </div>
+
+        <h2 style="margin-top:40px;">Match the following (11 marks)</h2>
+        <div class="match-wrapper">
+            <svg id="match-svg" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 1;"></svg>
+            <div class="match-col-container">
+                <div class="match-left">
+                    <div class="match-item"><span>1 + 1</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>10 - 1</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>2 + 2</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>10 - 3</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>3 + 3</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>10 - 5</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>4 + 4</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>10 - 7</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>5 + 5</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>10 - 9</span><button class="dot" data-side="left"></button></div>
+                    <div class="match-item"><span>6 + 6</span><button class="dot" data-side="left"></button></div>
+                </div>
+                <div class="match-right">
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>12</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>3</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>8</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>5</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>10</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>1</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>6</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>9</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>4</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>7</span></div>
+                    <div class="match-item"><button class="dot" data-side="right"></button><span>2</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- PAGE 12 -->
+    <div class="page" id="page12">
+        <h2>Count the sides.</h2>
+        <div class="grid-4" id="shapes-grid">
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,15 90,85 10,85" fill="#ffcccc" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="3"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="20,20 80,20 80,80 20,80" fill="#ccffcc" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="4"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,15 85,40 70,85 30,85 15,40" fill="#ccccff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="5"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="30,20 70,20 90,50 70,80 30,80 10,50" fill="#ffffcc" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="6"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,10 80,30 90,60 70,85 30,85 10,60 20,30" fill="#ffccff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="7"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="35,15 65,15 85,35 85,65 65,85 35,85 15,65 15,35" fill="#ccffff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="8"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="15,20 85,40 50,85" fill="#f0e6ff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="3"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="20,10 85,30 75,85 15,65" fill="#e6fffa" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="4"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="40,15 85,25 75,85 25,80 15,45" fill="#fff0e6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="5"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="40,15 80,20 85,60 55,85 25,75 15,40" fill="#e6f2ff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="6"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="20,20 80,50 20,80 45,50" fill="#ffe6e6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="4"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="25,15 85,15 75,50 85,85 25,85 35,50" fill="#e6ffe6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="6"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="20,20 85,15 80,65 50,85 30,75" fill="#ffe6f9" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="5"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="15,15 85,25 65,85 25,75" fill="#f9ffe6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="4"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,85 85,15 15,15" fill="#e6e6ff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="3"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="40,20 60,15 80,40 70,75 50,85 25,80 15,50 25,25" fill="#e6ffff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="8"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 100 100" width="80" height="80"><polygon points="35,15 75,25 85,55 60,85 25,75 15,50 20,25" fill="#ffe6f2" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="7"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,25 80,15 85,80 40,85 15,60" fill="#f2ffe6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="5"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="50,15 85,50 70,85 40,85 15,70 25,35" fill="#e6f9ff" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="6"> sides.</div></div>
+            <div class="shape-box"><svg viewBox="0 0 100 100" width="80" height="80"><polygon points="15,45 50,15 85,60 45,85" fill="#fff9e6" stroke="#333" stroke-width="3" stroke-linejoin="round"/></svg><div style="display:flex; justify-content:center; align-items:center;"><input type="number" class="short-input" min="3" data-ans="4"> sides.</div></div>
+        </div>
+        <div class="page-stats"></div>
+    </div>
+
+    <!-- Fixed Footer Navigation -->
+    <div class="page-footer">
+        <button class="nav-btn btn-prev" onclick="changePage(-1)" disabled>Back</button>
+        <div class="page-indicator">Page <span id="current-page-num">1</span> of 12</div>
+        
+        <div id="global-stats" style="display:none; font-weight: bold; background: #e9ecef; padding: 5px 15px; border-radius: 20px;">
+            Overall: <span style="color:#28a745">Correct: <span id="g-correct">0</span></span> | <span style="color:#dc3545">Incorrect: <span id="g-incorrect">0</span></span>
+        </div>
+
+        <button class="nav-btn btn-next" onclick="changePage(1)">Next</button>
+        <button class="nav-btn submit-btn" onclick="submitQuiz()" style="display:none;">Submit</button>
+    </div>
+
+</div>
+
+<script>
+    let isSubmitted = false;
+    let currentPage = 0;
+    const pages = document.querySelectorAll('.page');
+    const totalPages = pages.length;
+    const prevBtn = document.querySelector('.btn-prev');
+    const nextBtn = document.querySelector('.btn-next');
+    const submitBtn = document.querySelector('.submit-btn');
+    const pageNumDisplay = document.getElementById('current-page-num');
+    window.lines = [];
+
+    // Initialize stats containers
+    pages.forEach(page => {
+        const statsHtml = `
+            <strong>Page Stats:</strong> 
+            Inputs: <span class="stat-total">0</span> | 
+            Attempted: <span class="stat-attempted">0</span>
+            <span class="post-submit-stats" style="display:none;"> | 
+                <span style="color:#28a745">Correct: <span class="stat-correct">0</span></span> | 
+                <span style="color:#dc3545">Incorrect: <span class="stat-incorrect">0</span></span>
+            </span>
+        `;
+        const div = page.querySelector('.page-stats');
+        if(div) div.innerHTML = statsHtml;
+    });
+
+    function updateNav() {
+        pages.forEach((p, index) => p.classList.toggle('active', index === currentPage));
+        pageNumDisplay.innerText = currentPage + 1;
+        prevBtn.disabled = currentPage === 0;
+        
+        if (currentPage === totalPages - 1) {
+            nextBtn.style.display = 'none';
+            if(!isSubmitted) submitBtn.style.display = 'block';
+        } else {
+            nextBtn.style.display = 'block';
+            submitBtn.style.display = 'none';
+        }
+        pages[currentPage].scrollTop = 0;
+        if(!isSubmitted) updateLiveStats();
+    }
+
+    function changePage(dir) {
+        if (currentPage + dir >= 0 && currentPage + dir < totalPages) {
+            currentPage += dir;
+            updateNav();
+        }
+    }
+
+    function updateLiveStats() {
+        if(isSubmitted) return;
+        pages.forEach((page) => {
+            let total = 0;
+            let attempted = 0;
+
+            const inputs = page.querySelectorAll('input[type="text"]:not([readonly]), input[type="number"]');
+            total += inputs.length;
+            inputs.forEach(inp => { if(inp.value.trim() !== '') attempted++; });
+
+            const circleRows = page.querySelectorAll('.circle-row');
+            total += circleRows.length;
+            circleRows.forEach(row => { if(row.querySelector('.circled')) attempted++; });
+
+            const signSelectors = page.querySelectorAll('.sign-selector');
+            total += signSelectors.length;
+            signSelectors.forEach(sel => { if(sel.querySelector('.selected')) attempted++; });
+
+            const matchItems = page.querySelectorAll('.match-left .match-item');
+            total += matchItems.length;
+            matchItems.forEach(item => {
+                const dot = item.querySelector('.dot');
+                if(window.lines.some(l => l.left === dot)) attempted++;
+            });
+
+            const statsDiv = page.querySelector('.page-stats');
+            if(statsDiv) {
+                statsDiv.querySelector('.stat-total').innerText = total;
+                statsDiv.querySelector('.stat-attempted').innerText = attempted;
+            }
+        });
+    }
+
+    // Interactions
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.circle-num').forEach(num => {
+            num.addEventListener('click', () => { 
+                if(isSubmitted) return; 
+                const row = num.closest('.circle-row');
+                const wasCircled = num.classList.contains('circled');
+                
+                // Remove circle from all numbers in this specific row
+                row.querySelectorAll('.circle-num').forEach(n => n.classList.remove('circled'));
+                
+                // If the clicked number wasn't circled before, circle it now
+                if (!wasCircled) {
+                    num.classList.add('circled');
+                }
+            });
+        });
+
+        document.querySelectorAll('.sign-selector').forEach(selector => {
+            const gt = selector.querySelector('.gt');
+            const lt = selector.querySelector('.lt');
+
+            const toggleSign = (clicked, other) => {
+                if(isSubmitted) return;
+                if (clicked.classList.contains('selected')) {
+                    clicked.classList.remove('selected');
+                    other.style.display = 'inline';
+                } else {
+                    clicked.classList.add('selected');
+                    other.style.display = 'none';
+                }
+            };
+            gt.addEventListener('click', () => toggleSign(gt, lt));
+            lt.addEventListener('click', () => toggleSign(lt, gt));
+        });
+
+        const dots = document.querySelectorAll('.dot');
+        let selectedLeft = null;
+        let selectedRight = null;
+
+        dots.forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                if(isSubmitted) return;
+                const side = e.target.dataset.side;
+                
+                if (side === 'left') {
+                    if (selectedLeft) selectedLeft.classList.remove('active');
+                    selectedLeft = e.target;
+                    selectedLeft.classList.add('active');
+                } else {
+                    if (selectedRight) selectedRight.classList.remove('active');
+                    selectedRight = e.target;
+                    selectedRight.classList.add('active');
+                }
+
+                if (selectedLeft && selectedRight) {
+                    window.lines = window.lines.filter(line => line.left !== selectedLeft && line.right !== selectedRight);
+                    window.lines.push({ left: selectedLeft, right: selectedRight });
+                    
+                    selectedLeft.classList.remove('active');
+                    selectedRight.classList.remove('active');
+                    selectedLeft = null;
+                    selectedRight = null;
+                    drawAllLines();
+                    updateLiveStats();
+                }
+            });
+        });
+
+        window.addEventListener('resize', drawAllLines);
+
+        document.addEventListener('input', updateLiveStats);
+        document.addEventListener('click', (e) => {
+            if(e.target.matches('.circle-num, .sign')) setTimeout(updateLiveStats, 50);
+        });
+        
+        updateLiveStats();
+    });
+
+    function drawAllLines() {
+        const svg = document.getElementById('match-svg');
+        const wrapper = document.querySelector('.match-wrapper');
+        if(!svg || !wrapper) return;
+        svg.innerHTML = '';
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        window.lines.forEach(lineObj => {
+            const r1 = lineObj.left.getBoundingClientRect();
+            const r2 = lineObj.right.getBoundingClientRect();
+            const x1 = r1.left - wrapperRect.left + r1.width / 2;
+            const y1 = r1.top - wrapperRect.top + r1.height / 2;
+            const x2 = r2.left - wrapperRect.left + r2.width / 2;
+            const y2 = r2.top - wrapperRect.top + r2.height / 2;
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1);
+            line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2);
+            line.setAttribute("y2", y2);
+            line.setAttribute("stroke", "#0066cc");
+            line.setAttribute("stroke-width", "3");
+            line.setAttribute("stroke-linecap", "round");
+            svg.appendChild(line);
+        });
+    }
+
+    function markAnswer(el, isCorrect, type) {
+        if(el.parentElement.querySelector('.tick, .cross') && type !== 'absolute' && type !== 'circle-row') return;
+
+        const mark = document.createElement('span');
+        mark.className = isCorrect ? 'tick' : 'cross';
+        mark.innerText = isCorrect ? '✔' : '✖';
+
+        if (type === 'absolute') { 
+            mark.style.position = 'absolute';
+            mark.style.left = `calc(${el.style.left} + 28px)`;
+            mark.style.top = el.style.top;
+            mark.style.transform = 'translate(0, -50%)';
+            el.parentElement.appendChild(mark);
+        } else if (type === 'vertical') {
+            mark.style.position = 'absolute';
+            mark.style.right = '-35px';
+            mark.style.bottom = '5px';
+            el.parentElement.appendChild(mark);
+        } else if (type === 'circle-row' || type === 'sign') {
+            el.appendChild(mark);
+        } else if (type === 'match') {
+            mark.style.position = 'absolute';
+            mark.style.left = '-35px';
+            el.appendChild(mark);
+        } else {
+            if(el.parentElement.classList.contains('horizontal-math') || el.closest('td') || el.parentElement.tagName === 'LI') {
+                el.parentElement.appendChild(mark);
+            } else if (el.closest('.shape-box') || el.closest('.clock-container')) {
+                el.insertAdjacentElement('afterend', mark);
+            } else {
+                el.insertAdjacentElement('afterend', mark);
+            }
+        }
+    }
+
+    function submitQuiz() {
+        if(isSubmitted) return;
+        isSubmitted = true;
+        submitBtn.style.display = 'none';
+
+        let globalTotal = 0, globalCorrect = 0, globalIncorrect = 0;
+
+        pages.forEach(page => {
+            let pageTotal = 0, pageCorrect = 0, pageIncorrect = 0;
+            
+            // 1. Standard Inputs
+            const inputs = page.querySelectorAll('input[type="text"]:not([readonly]), input[type="number"]');
+            inputs.forEach(inp => {
+                pageTotal++;
+                const val = inp.value.trim();
+                const isAttempted = val !== '';
+                let isCorrect = false;
+                
+                if (inp.classList.contains('minmax-input')) {
+                    const tr = inp.closest('tr');
+                    const nums = tr.cells[0].innerText.split(',').map(n => parseInt(n.trim()));
+                    const isMin = inp.dataset.minmax === 'min';
+                    const expected = isMin ? Math.min(...nums) : Math.max(...nums);
+                    if (isAttempted && parseInt(val) === expected) isCorrect = true;
+                } else if (inp.dataset.ans !== undefined) {
+                    if (isAttempted && parseInt(val) === parseInt(inp.dataset.ans)) isCorrect = true;
+                } else {
+                    const vMath = inp.closest('.vertical-math');
+                    if(vMath) {
+                        const top = parseInt(vMath.querySelector('.top-num').innerText);
+                        const bot = parseInt(vMath.querySelector('.bottom-row span:last-child').innerText);
+                        const op = vMath.querySelector('.bottom-row span:first-child').innerText;
+                        const expected = op === '+' ? top + bot : top - bot;
+                        if (isAttempted && parseInt(val) === expected) isCorrect = true;
+                    }
+                    
+                    const hMath = inp.closest('.horizontal-math');
+                    if(hMath && !hMath.querySelector('.sign-selector')) {
+                        const text = hMath.innerText;
+                        let expected;
+                        if(text.includes('+')) {
+                            const p = text.match(/(\d+)\s*\+\s*(\d+)/);
+                            if(p) expected = parseInt(p[1]) + parseInt(p[2]);
+                        } else if(text.includes('-')) {
+                            const p = text.match(/(\d+)\s*-\s*(\d+)/);
+                            if(p) expected = parseInt(p[1]) - parseInt(p[2]);
+                        } else if(text.includes('more than')) {
+                            const p = text.match(/(\d+)\s*more than\s*(\d+)/);
+                            if(p) expected = parseInt(p[1]) + parseInt(p[2]);
+                        } else if(text.includes('less than')) {
+                            const p = text.match(/(\d+)\s*less than\s*(\d+)/);
+                            if(p) expected = parseInt(p[2]) - parseInt(p[1]);
+                        }
+                        if (expected !== undefined && isAttempted && parseInt(val) === expected) isCorrect = true;
+                    }
+                }
+                
+                if (isCorrect) pageCorrect++; else pageIncorrect++;
+                
+                let markType = 'normal';
+                if(inp.classList.contains('wheel-input')) markType = 'absolute';
+                else if(inp.closest('.vertical-math')) markType = 'vertical';
+                markAnswer(inp, isCorrect, markType);
+                inp.readOnly = true; 
+            });
+
+            // 2. Circles
+            const circleRows = page.querySelectorAll('.circle-row');
+            circleRows.forEach(row => {
+                pageTotal++;
+                const circled = row.querySelectorAll('.circled');
+                const isEvenTask = row.closest('.circle-group').dataset.task === 'even';
+                let isCorrect = false;
+                
+                if (circled.length === 1) {
+                    const v = parseInt(circled[0].innerText);
+                    isCorrect = isEvenTask ? (v % 2 === 0) : (v % 2 !== 0);
+                }
+                
+                if (isCorrect) pageCorrect++; else pageIncorrect++;
+                markAnswer(row, isCorrect, 'circle-row');
+            });
+
+            // 3. Signs
+            const signSelectors = page.querySelectorAll('.sign-selector');
+            signSelectors.forEach(sel => {
+                pageTotal++;
+                const text = sel.parentElement.innerText;
+                const nums = text.match(/\d+/g);
+                let isCorrect = false;
+                if (nums && nums.length >= 2) {
+                    const left = parseInt(nums[0]);
+                    const right = parseInt(nums[1]);
+                    const gtSelected = sel.querySelector('.gt').classList.contains('selected');
+                    const ltSelected = sel.querySelector('.lt').classList.contains('selected');
+                    
+                    if (left > right && gtSelected) isCorrect = true;
+                    if (left < right && ltSelected) isCorrect = true;
+                }
+                
+                if(isCorrect) pageCorrect++; else pageIncorrect++;
+                markAnswer(sel, isCorrect, 'sign');
+            });
+
+            // 4. Matches
+            const matchItems = page.querySelectorAll('.match-left .match-item');
+            matchItems.forEach(item => {
+                pageTotal++;
+                const dot = item.querySelector('.dot');
+                const line = window.lines.find(l => l.left === dot);
+                let isCorrect = false;
+                
+                if (line) {
+                    const leftText = item.innerText.trim();
+                    const rightText = line.right.nextElementSibling.innerText.trim();
+                    let expected;
+                    if(leftText.includes('+')) {
+                        const p = leftText.split('+');
+                        expected = parseInt(p[0]) + parseInt(p[1]);
+                    } else if(leftText.includes('-')) {
+                        const p = leftText.split('-');
+                        expected = parseInt(p[0]) - parseInt(p[1]);
+                    }
+                    if (expected === parseInt(rightText)) isCorrect = true;
+                }
+                
+                if (isCorrect) pageCorrect++; else pageIncorrect++;
+                markAnswer(item, isCorrect, 'match');
+            });
+
+            // Update Page Stats Display
+            const statsDiv = page.querySelector('.page-stats');
+            if(statsDiv) {
+                statsDiv.querySelector('.post-submit-stats').style.display = 'inline';
+                statsDiv.querySelector('.stat-correct').innerText = pageCorrect;
+                statsDiv.querySelector('.stat-incorrect').innerText = pageIncorrect;
+            }
+
+            globalTotal += pageTotal;
+            globalCorrect += pageCorrect;
+            globalIncorrect += pageIncorrect;
+        });
+
+        // Show Global Stats
+        const gStats = document.getElementById('global-stats');
+        gStats.style.display = 'block';
+        document.getElementById('g-correct').innerText = globalCorrect;
+        document.getElementById('g-incorrect').innerText = globalIncorrect;
+
+        // Reset to first page
+        currentPage = 0;
+        updateNav();
+    }
+</script>
+</body>
+</html>

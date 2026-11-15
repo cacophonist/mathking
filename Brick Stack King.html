@@ -3,13 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Brick Stack King</title>
+<title>Brick Stack King - Grade 1 Math Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: three flat panels on a building-site day. Left = controls (3/4 wide),
-   right = brick tower (1/4 wide), bottom = the little man's strip (1/6 tall).
-   One canvas floats over everything so he can cross between panels. */
 :root{
   color-scheme: light;
   --ink:#1d2440;
@@ -51,37 +48,274 @@ body{
 }
 #stage{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
 
-.score{position:absolute;top:4.5vh;left:5vh;display:flex;flex-direction:column;gap:1vh}
-.score-label{font:700 2.4vh/1 var(--font-display);letter-spacing:.28em;opacity:.65}
+.score{position:absolute;top:3.5vh;left:4.5vh;display:flex;flex-direction:column;gap:0.8vh;z-index:10}
+.score-label{font:700 2.2vh/1 var(--font-display);letter-spacing:.28em;opacity:.65}
 .score-row{display:flex;align-items:baseline;gap:1vh;font-family:var(--font-display);font-variant-numeric:tabular-nums}
-#num{font-weight:800;font-size:13vh;line-height:.85;display:inline-block;min-width:1ch}
+#num{font-weight:800;font-size:10vh;line-height:.85;display:inline-block;min-width:1ch}
 #num.pop{animation:pop .35s ease-out}
-.score-max{font-weight:700;font-size:4vh;opacity:.5}
+.score-max{font-weight:700;font-size:3.5vh;opacity:.5}
 #pips{display:flex;gap:.7vh}
-#pips span{width:3.1vh;height:1.5vh;border:2px solid var(--ink);border-radius:.4vh;background:transparent;transition:background .2s,transform .2s}
+#pips span{width:2.8vh;height:1.4vh;border:2px solid var(--ink);border-radius:.4vh;background:transparent;transition:background .2s,transform .2s}
 #pips span.on{background:#c8553d;transform:translateY(-.3vh)}
 
-.controls{position:absolute;left:50%;bottom:8vh;transform:translateX(-50%);display:flex;gap:6vh}
-.btn{
-  width:17vh;height:17vh;border-radius:30%;
-  border:3px solid var(--ink);cursor:pointer;
-  display:grid;place-items:center;
-  box-shadow:0 1.2vh 0 var(--ink);
+/* Quiz Panel */
+.quiz-panel{
+  position:absolute;
+  left:54%;top:50%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3.5vh;
+  z-index:2;
+}
+
+.quiz-card{
+  background:#fff;
+  border:3.5px solid var(--ink);
+  border-radius:2.6vh;
+  box-shadow:0 1vh 0 var(--ink);
+  width:38vh;
+  min-height:48vh;
+  padding:2.5vh 2.5vh 2.2vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
+}
+
+.q-badge{
+  font:800 1.9vh/1 var(--font-display);
+  letter-spacing:.12em;
+  color:var(--ink);
+  background:var(--sand);
+  border:2.5px solid var(--ink);
+  border-radius:99px;
+  padding:.6vh 1.8vh;
+  text-transform:uppercase;
+  box-shadow:0 .3vh 0 var(--ink);
+}
+
+.q-content{
+  flex:1;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:1.5vh 0;
+}
+
+/* Vertical Math */
+.q-vertical-math{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  font:800 6.2vh/1.1 var(--font-display);
+  letter-spacing:.05em;
+  min-width:13vh;
+}
+.q-v-top{padding-right:.8vh}
+.q-v-bottom{
+  display:flex;
+  justify-content:space-between;
+  width:100%;
+  border-bottom:4px solid var(--ink);
+  padding-bottom:.5vh;
+}
+
+/* Horizontal Expressions */
+.q-horizontal-math{
+  font:800 4.8vh/1.2 var(--font-display);
+  display:flex;
+  align-items:center;
+  gap:1.2vh;
+  text-align:center;
+}
+.q-h-text{font-size:3.6vh;flex-direction:column;gap:.5vh}
+
+/* Sequences & Chips */
+.q-puzzle-prompt{
+  font:700 2.4vh/1.2 var(--font-display);
+  margin-bottom:1.5vh;
+  opacity:.85;
+}
+.q-seq-items{
+  font:800 3.8vh/1.2 var(--font-display);
+  display:flex;
+  align-items:baseline;
+  gap:.8vh;
+}
+.q-seq-target{
+  background:var(--sand);
+  border:2.5px dashed var(--ink);
+  border-radius:.8vh;
+  padding:.2vh 1vh;
+  color:#c8553d;
+}
+.q-number-chips{
+  display:flex;
+  gap:1vh;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.q-chip{
+  background:#f1f4f9;
+  border:2.5px solid var(--ink);
+  border-radius:1.2vh;
+  padding:.6vh 1.4vh;
+  font:800 3.2vh/1 var(--font-display);
+  box-shadow:0 .3vh 0 var(--ink);
+}
+
+/* SVG Clocks and Shapes */
+.q-clock-svg, .q-shape-svg{
+  width:14vh;
+  height:14vh;
+  margin-bottom:1vh;
+  filter:drop-shadow(0 .4vh 0 rgba(0,0,0,.08));
+}
+.q-prompt-text{
+  font:700 2.4vh/1.2 var(--font-display);
+  opacity:.85;
+}
+.response-unit{
+  font:700 2.6vh/1 var(--font-display);
+  opacity:.75;
+  margin-left:.5vh;
+}
+
+/* Response row */
+.response-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1.2vh;
+  width:100%;
+}
+.response-box{
+  background:#fff;
+  border:3.5px solid var(--ink);
+  border-radius:1.8vh;
+  height:7.8vh;
+  min-width:14vh;
+  padding:0 1.8vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:inset 0 .4vh .6vh rgba(0,0,0,.08),0 .5vh 0 var(--ink);
+  transition:border-color .15s,background .15s;
+}
+.response-box.correct{
+  border-color:var(--go);
+  background:#eaf8f0;
+}
+.response-box.wrong{
+  border-color:var(--stop);
+  background:#fdf0ee;
+}
+#response-text{
+  font:800 4.8vh/1 var(--font-display);
+  color:var(--ink);
+}
+#response-text.placeholder{
+  color:#a0a6b8;
+  font-weight:500;
+}
+.result-mark{
+  width:6.5vh;
+  height:6.5vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:800 5.2vh/1 var(--font-display);
+}
+.result-mark .tick{
+  color:var(--go);
+  animation:pop .35s ease-out;
+}
+.result-mark .cross{
+  color:var(--stop);
+  animation:shake .35s;
+}
+
+/* Keypad */
+.keypad-container{
+  display:flex;
+  flex-direction:column;
+  gap:1.5vh;
+  width:29vh;
+}
+.keypad-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:1.2vh;
+}
+.key-btn{
+  height:7.6vh;
+  border:3px solid var(--ink);
+  border-radius:1.8vh;
+  background:#fff;
+  color:var(--ink);
+  font:800 3.6vh/1 var(--font-display);
+  cursor:pointer;
+  box-shadow:0 .7vh 0 var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .06s,box-shadow .06s,filter .2s;
+  user-select:none;-webkit-user-select:none;
+}
+.key-btn:active:not(:disabled){
+  transform:translateY(.45vh);
+  box-shadow:0 .25vh 0 var(--ink);
+}
+.key-btn:disabled{
+  filter:grayscale(.8) opacity(.45);
+  cursor:default;
+}
+.key-btn.action-clear{
+  background:#ffe3de;
+  color:#c8402c;
+  font-size:3vh;
+}
+.key-btn.action-back{
+  background:#eef2f7;
+  font-size:3.2vh;
+}
+.check-btn{
+  height:7.6vh;
+  border:3.5px solid var(--ink);
+  border-radius:1.8vh;
+  background:var(--go);
+  color:#fff;
+  font:800 3.2vh/1 var(--font-display);
+  letter-spacing:.08em;
+  cursor:pointer;
+  box-shadow:0 .8vh 0 var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1vh;
   transition:transform .06s,box-shadow .06s,filter .2s;
 }
-.btn svg{width:56%;height:56%}
-.btn:active:not(:disabled){transform:translateY(.9vh);box-shadow:0 .3vh 0 var(--ink)}
-.btn:focus-visible{outline:4px solid var(--gold);outline-offset:4px}
-.btn:disabled{filter:grayscale(.8) opacity(.45);cursor:default}
-#ok{background:var(--go)}
-#no{background:var(--stop)}
-.btn.shake{animation:shake .35s}
+.check-btn:active:not(:disabled){
+  transform:translateY(.45vh);
+  box-shadow:0 .35vh 0 var(--ink);
+}
+.check-btn:disabled{
+  filter:grayscale(.8) opacity(.45);
+  cursor:default;
+  box-shadow:0 .4vh 0 var(--ink);
+}
 
 #over{
   position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
   text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5vh;
-  background:#fff;border:3px solid var(--ink);border-radius:3vh;
-  padding:3.5vh 6vh;box-shadow:0 1.2vh 0 var(--ink);
+  background:#fff;border:3.5px solid var(--ink);border-radius:3vh;
+  padding:3.5vh 6vh;box-shadow:0 1.2vh 0 var(--ink);z-index:20;
 }
 #over[hidden]{display:none}
 #over h1{font:800 8vh/1 var(--font-display);text-wrap:balance}
@@ -96,10 +330,43 @@ body{
 
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-4deg)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{translate:0}20%{translate:-1vh}40%{translate:1vh}60%{translate:-.7vh}80%{translate:.7vh}}
+
+@media (max-width: 900px) {
+  .quiz-panel{gap:2vh;transform:translate(-50%,-46%) scale(0.9)}
+}
+@media (max-width: 680px) {
+  .quiz-panel{flex-direction:column;gap:1.5vh;transform:translate(-50%,-46%) scale(0.78)}
+}
 </style>
 </head>
 <body>
-  <section id="left" aria-label="Controls">
+  <!-- Reusable SVG Assets for Clock -->
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <g id="dial-markers">
+        <line x1="50" y1="5" x2="50" y2="12" stroke="#1d2440" stroke-width="2.5" transform="rotate(0 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(30 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(60 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="12" stroke="#1d2440" stroke-width="2.5" transform="rotate(90 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(120 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(150 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="12" stroke="#1d2440" stroke-width="2.5" transform="rotate(180 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(210 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(240 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="12" stroke="#1d2440" stroke-width="2.5" transform="rotate(270 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(300 50 50)"/>
+        <line x1="50" y1="5" x2="50" y2="10" stroke="#1d2440" stroke-width="1.5" transform="rotate(330 50 50)"/>
+      </g>
+      <path id="minute-hand" d="M 48.5 50 L 51.5 50 L 51.5 25 L 54 25 L 50 12 L 46 25 L 48.5 25 Z" fill="#1d2440"/>
+      <path id="hour-hand" d="M 47.5 50 L 52.5 50 L 52.5 33 L 56 33 L 50 20 L 44 33 L 47.5 33 Z" fill="#1d2440"/>
+      <g id="center-pin">
+        <circle cx="50" cy="50" r="4.5" fill="#1d2440"/>
+        <circle cx="50" cy="50" r="2" fill="#e2503f"/>
+      </g>
+    </defs>
+  </svg>
+
+  <section id="left" aria-label="Math Quiz Controls">
     <div class="score" aria-live="polite">
       <div class="score-label">SCORE</div>
       <div class="score-row"><span id="num">0</span><span class="score-max">/ 10</span></div>
@@ -112,15 +379,47 @@ body{
       <button id="again" type="button">Play again</button>
     </div>
 
-    <div class="controls">
-      <button id="ok" class="btn" type="button" aria-label="Tick: add a brick, score plus one">
-        <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 26l10 10L39 13"></path></svg>
-      </button>
-      <button id="no" class="btn" type="button" aria-label="Cross: knock a brick out, score minus one">
-        <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" aria-hidden="true"><path d="M12 12l24 24M36 12L12 36"></path></svg>
-      </button>
+    <!-- Math Quiz Interface -->
+    <div class="quiz-panel">
+      <div class="quiz-card">
+        <div class="q-badge" id="q-category">ADDITION</div>
+        
+        <div class="q-content" id="q-content">
+          <!-- Dynamic Question rendered here -->
+        </div>
+        
+        <div class="response-row">
+          <div class="response-box" id="response-box">
+            <span id="response-text" class="placeholder">?</span>
+            <span id="response-unit" class="response-unit" style="display:none;"></span>
+          </div>
+          <div id="result-mark" class="result-mark" aria-live="assertive"></div>
+        </div>
+      </div>
+
+      <div class="keypad-container">
+        <div class="keypad-grid">
+          <button type="button" class="key-btn" data-key="1">1</button>
+          <button type="button" class="key-btn" data-key="2">2</button>
+          <button type="button" class="key-btn" data-key="3">3</button>
+          <button type="button" class="key-btn" data-key="4">4</button>
+          <button type="button" class="key-btn" data-key="5">5</button>
+          <button type="button" class="key-btn" data-key="6">6</button>
+          <button type="button" class="key-btn" data-key="7">7</button>
+          <button type="button" class="key-btn" data-key="8">8</button>
+          <button type="button" class="key-btn" data-key="9">9</button>
+          <button type="button" class="key-btn action-clear" data-key="clear" title="Clear">C</button>
+          <button type="button" class="key-btn" data-key="0">0</button>
+          <button type="button" class="key-btn action-back" data-key="backspace" title="Backspace">⌫</button>
+        </div>
+        <button type="button" id="check-btn" class="check-btn" disabled>
+          <span>CHECK</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:2.4vh;height:2.4vh"><path d="M5 13l4 4L19 7"/></svg>
+        </button>
+      </div>
     </div>
   </section>
+
   <section id="right" aria-label="Brick tower"></section>
   <section id="bottom" aria-label="The little man's strip"></section>
   <canvas id="stage" aria-hidden="true"></canvas>
@@ -128,15 +427,361 @@ body{
 <script>
 (() => {
 'use strict';
+
+/* ============================================================
+   1. GRADE 1 MATH QUESTIONS REPOSITORY
+   ============================================================ */
+const QUESTIONS = [
+  // --- Addition (Vertical) ---
+  { type: 'v_add', cat: 'Addition', top: 1, bot: 2, ans: 3 },
+  { type: 'v_add', cat: 'Addition', top: 2, bot: 3, ans: 5 },
+  { type: 'v_add', cat: 'Addition', top: 3, bot: 4, ans: 7 },
+  { type: 'v_add', cat: 'Addition', top: 4, bot: 5, ans: 9 },
+  { type: 'v_add', cat: 'Addition', top: 5, bot: 6, ans: 11 },
+  { type: 'v_add', cat: 'Addition', top: 6, bot: 7, ans: 13 },
+  { type: 'v_add', cat: 'Addition', top: 7, bot: 8, ans: 15 },
+  { type: 'v_add', cat: 'Addition', top: 8, bot: 9, ans: 17 },
+  { type: 'v_add', cat: 'Addition', top: 4, bot: 7, ans: 11 },
+  { type: 'v_add', cat: 'Addition', top: 5, bot: 8, ans: 13 },
+  { type: 'v_add', cat: 'Addition', top: 6, bot: 9, ans: 15 },
+  { type: 'v_add', cat: 'Addition', top: 3, bot: 8, ans: 11 },
+  { type: 'v_add', cat: 'Addition', top: 4, bot: 9, ans: 13 },
+  { type: 'v_add', cat: 'Addition', top: 2, bot: 9, ans: 11 },
+
+  // --- Subtraction (Vertical) ---
+  { type: 'v_sub', cat: 'Subtraction', top: 5, bot: 2, ans: 3 },
+  { type: 'v_sub', cat: 'Subtraction', top: 6, bot: 3, ans: 3 },
+  { type: 'v_sub', cat: 'Subtraction', top: 7, bot: 4, ans: 3 },
+  { type: 'v_sub', cat: 'Subtraction', top: 8, bot: 5, ans: 3 },
+  { type: 'v_sub', cat: 'Subtraction', top: 9, bot: 6, ans: 3 },
+  { type: 'v_sub', cat: 'Subtraction', top: 7, bot: 2, ans: 5 },
+  { type: 'v_sub', cat: 'Subtraction', top: 8, bot: 3, ans: 5 },
+  { type: 'v_sub', cat: 'Subtraction', top: 9, bot: 4, ans: 5 },
+  { type: 'v_sub', cat: 'Subtraction', top: 8, bot: 1, ans: 7 },
+  { type: 'v_sub', cat: 'Subtraction', top: 9, bot: 2, ans: 7 },
+  { type: 'v_sub', cat: 'Subtraction', top: 7, bot: 6, ans: 1 },
+
+  // --- Horizontal Addition ---
+  { type: 'h_expr', cat: 'Addition', expr: '0 + 4', ans: 4 },
+  { type: 'h_expr', cat: 'Addition', expr: '1 + 7', ans: 8 },
+  { type: 'h_expr', cat: 'Addition', expr: '2 + 6', ans: 8 },
+  { type: 'h_expr', cat: 'Addition', expr: '3 + 5', ans: 8 },
+  { type: 'h_expr', cat: 'Addition', expr: '3 + 7', ans: 10 },
+  { type: 'h_expr', cat: 'Addition', expr: '4 + 6', ans: 10 },
+  { type: 'h_expr', cat: 'Addition', expr: '4 + 8', ans: 12 },
+  { type: 'h_expr', cat: 'Addition', expr: '5 + 7', ans: 12 },
+  { type: 'h_expr', cat: 'Addition', expr: '5 + 9', ans: 14 },
+  { type: 'h_expr', cat: 'Addition', expr: '6 + 8', ans: 14 },
+
+  // --- Horizontal Subtraction ---
+  { type: 'h_expr', cat: 'Subtraction', expr: '5 - 3', ans: 2 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '6 - 4', ans: 2 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '7 - 5', ans: 2 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '8 - 6', ans: 2 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '9 - 7', ans: 2 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '8 - 4', ans: 4 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '9 - 5', ans: 4 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '10 - 6', ans: 4 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '10 - 4', ans: 6 },
+  { type: 'h_expr', cat: 'Subtraction', expr: '10 - 2', ans: 8 },
+
+  // --- More Than / Less Than ---
+  { type: 'h_text', cat: 'More Than', expr: '1 more than 4', ans: 5 },
+  { type: 'h_text', cat: 'More Than', expr: '2 more than 3', ans: 5 },
+  { type: 'h_text', cat: 'More Than', expr: '2 more than 5', ans: 7 },
+  { type: 'h_text', cat: 'More Than', expr: '3 more than 4', ans: 7 },
+  { type: 'h_text', cat: 'More Than', expr: '4 more than 3', ans: 7 },
+  { type: 'h_text', cat: 'More Than', expr: '5 more than 1', ans: 6 },
+  { type: 'h_text', cat: 'Less Than', expr: '1 less than 4', ans: 3 },
+  { type: 'h_text', cat: 'Less Than', expr: '2 less than 5', ans: 3 },
+  { type: 'h_text', cat: 'Less Than', expr: '2 less than 7', ans: 5 },
+  { type: 'h_text', cat: 'Less Than', expr: '3 less than 6', ans: 3 },
+  { type: 'h_text', cat: 'Less Than', expr: '3 less than 8', ans: 5 },
+  { type: 'h_text', cat: 'Less Than', expr: '4 less than 8', ans: 4 },
+
+  // --- Multiplication Wheels ---
+  { type: 'h_expr', cat: 'Multiplication', expr: '3 × 9', ans: 27 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '3 × 6', ans: 18 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '3 × 4', ans: 12 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '3 × 8', ans: 24 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '10 × 4', ans: 40 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '10 × 6', ans: 60 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '10 × 9', ans: 90 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '10 × 5', ans: 50 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '5 × 3', ans: 15 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '5 × 4', ans: 20 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '5 × 8', ans: 40 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '2 × 5', ans: 10 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '2 × 8', ans: 16 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '2 × 7', ans: 14 },
+  { type: 'h_expr', cat: 'Multiplication', expr: '2 × 9', ans: 18 },
+
+  // --- Missing Numbers ---
+  { type: 'sequence', cat: 'Sequences', items: ['27', '28', '29', '30', '?'], ans: 31 },
+  { type: 'sequence', cat: 'Sequences', items: ['19', '20', '21', '?', '23'], ans: 22 },
+  { type: 'sequence', cat: 'Sequences', items: ['32', '34', '36', '38', '?'], ans: 40 },
+  { type: 'sequence', cat: 'Sequences', items: ['45', '46', '47', '?', '49'], ans: 48 },
+  { type: 'sequence', cat: 'Sequences', items: ['87', '89', '91', '?', '95'], ans: 93 },
+  { type: 'sequence', cat: 'Sequences', items: ['24', '26', '28', '30', '?'], ans: 32 },
+  { type: 'sequence', cat: 'Sequences', items: ['76', '75', '74', '?', '72'], ans: 73 },
+  { type: 'sequence', cat: 'Sequences', items: ['63', '64', '65', '?', '67'], ans: 66 },
+
+  // --- Clock (Time) ---
+  { type: 'clock', cat: 'Telling Time', hour: 6, rot: 180, ans: 6 },
+  { type: 'clock', cat: 'Telling Time', hour: 9, rot: 270, ans: 9 },
+  { type: 'clock', cat: 'Telling Time', hour: 4, rot: 120, ans: 4 },
+  { type: 'clock', cat: 'Telling Time', hour: 10, rot: 300, ans: 10 },
+  { type: 'clock', cat: 'Telling Time', hour: 2, rot: 60, ans: 2 },
+  { type: 'clock', cat: 'Telling Time', hour: 8, rot: 240, ans: 8 },
+  { type: 'clock', cat: 'Telling Time', hour: 12, rot: 0, ans: 12 },
+  { type: 'clock', cat: 'Telling Time', hour: 3, rot: 90, ans: 3 },
+  { type: 'clock', cat: 'Telling Time', hour: 7, rot: 210, ans: 7 },
+
+  // --- Geometry (Shape Sides) ---
+  { type: 'shape', cat: 'Count Sides', points: '50,15 90,85 10,85', fill: '#ffcccc', ans: 3 },
+  { type: 'shape', cat: 'Count Sides', points: '20,20 80,20 80,80 20,80', fill: '#ccffcc', ans: 4 },
+  { type: 'shape', cat: 'Count Sides', points: '50,15 85,40 70,85 30,85 15,40', fill: '#ccccff', ans: 5 },
+  { type: 'shape', cat: 'Count Sides', points: '30,20 70,20 90,50 70,80 30,80 10,50', fill: '#ffffcc', ans: 6 },
+  { type: 'shape', cat: 'Count Sides', points: '50,10 80,30 90,60 70,85 30,85 10,60 20,30', fill: '#ffccff', ans: 7 },
+  { type: 'shape', cat: 'Count Sides', points: '35,15 65,15 85,35 85,65 65,85 35,85 15,65 15,35', fill: '#ccffff', ans: 8 },
+  { type: 'shape', cat: 'Count Sides', points: '15,20 85,40 50,85', fill: '#f0e6ff', ans: 3 },
+  { type: 'shape', cat: 'Count Sides', points: '20,10 85,30 75,85 15,65', fill: '#e6fffa', ans: 4 },
+  { type: 'shape', cat: 'Count Sides', points: '40,15 85,25 75,85 25,80 15,45', fill: '#fff0e6', ans: 5 },
+
+  // --- Even / Odd ---
+  { type: 'choice', cat: 'Even Numbers', prompt: 'Which number is EVEN?', list: [3, 2, 5, 7, 9], ans: 2 },
+  { type: 'choice', cat: 'Even Numbers', prompt: 'Which number is EVEN?', list: [1, 3, 4, 5, 7], ans: 4 },
+  { type: 'choice', cat: 'Even Numbers', prompt: 'Which number is EVEN?', list: [3, 9, 5, 7, 6], ans: 6 },
+  { type: 'choice', cat: 'Even Numbers', prompt: 'Which number is EVEN?', list: [3, 8, 7, 5, 9], ans: 8 },
+  { type: 'choice', cat: 'Odd Numbers', prompt: 'Which number is ODD?', list: [2, 4, 8, 10, 3], ans: 3 },
+  { type: 'choice', cat: 'Odd Numbers', prompt: 'Which number is ODD?', list: [10, 7, 8, 6, 2], ans: 7 },
+  { type: 'choice', cat: 'Odd Numbers', prompt: 'Which number is ODD?', list: [2, 4, 10, 6, 5], ans: 5 },
+  { type: 'choice', cat: 'Odd Numbers', prompt: 'Which number is ODD?', list: [6, 4, 2, 10, 9], ans: 9 },
+
+  // --- Smallest & Greatest ---
+  { type: 'choice', cat: 'Smallest Number', prompt: 'Which is the SMALLEST?', list: [11, 20, 30, 60], ans: 11 },
+  { type: 'choice', cat: 'Smallest Number', prompt: 'Which is the SMALLEST?', list: [37, 45, 94, 59], ans: 37 },
+  { type: 'choice', cat: 'Smallest Number', prompt: 'Which is the SMALLEST?', list: [76, 68, 28, 55], ans: 28 },
+  { type: 'choice', cat: 'Greatest Number', prompt: 'Which is the GREATEST?', list: [19, 85, 52, 42], ans: 85 },
+  { type: 'choice', cat: 'Greatest Number', prompt: 'Which is the GREATEST?', list: [10, 84, 27, 26], ans: 84 },
+  { type: 'choice', cat: 'Greatest Number', prompt: 'Which is the GREATEST?', list: [5, 99, 13, 42], ans: 99 }
+];
+
+/* ============================================================
+   2. DOM REFERENCES & MATH QUIZ CONTROLLER
+   ============================================================ */
 const $ = id => document.getElementById(id);
 const cv = $('stage'), ctx = cv.getContext('2d');
+const numEl = $('num'), pipsEl = $('pips'), overEl = $('over'), checkBtn = $('check-btn');
+const responseText = $('response-text'), responseBox = $('response-box'), resultMark = $('result-mark'), responseUnit = $('response-unit');
+const qCategory = $('q-category'), qContent = $('q-content');
+
+let currentQuestion = null;
+let currentInput = '';
+let isAnsweringLocked = false;
+let questionPool = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function nextQuestion() {
+  if (questionPool.length === 0) {
+    questionPool = shuffle(QUESTIONS);
+  }
+  currentQuestion = questionPool.pop();
+  currentInput = '';
+  responseText.textContent = '?';
+  responseText.classList.add('placeholder');
+  resultMark.innerHTML = '';
+  responseBox.classList.remove('correct', 'wrong');
+  checkBtn.disabled = true;
+  isAnsweringLocked = false;
+  renderQuestion(currentQuestion);
+}
+
+function renderQuestion(q) {
+  qCategory.textContent = q.cat;
+  qContent.innerHTML = '';
+  
+  if (q.type === 'v_add' || q.type === 'v_sub') {
+    const op = (q.type === 'v_add') ? '+' : '-';
+    qContent.innerHTML = `
+      <div class="q-vertical-math">
+        <span class="q-v-top">${q.top}</span>
+        <div class="q-v-bottom"><span>${op}</span><span>${q.bot}</span></div>
+      </div>
+    `;
+    responseUnit.style.display = 'none';
+  } else if (q.type === 'h_expr') {
+    qContent.innerHTML = `
+      <div class="q-horizontal-math">
+        <span class="q-h-expr">${q.expr}</span>
+        <span class="q-h-eq">=</span>
+      </div>
+    `;
+    responseUnit.style.display = 'none';
+  } else if (q.type === 'h_text') {
+    qContent.innerHTML = `
+      <div class="q-horizontal-math q-h-text">
+        <span class="q-h-expr">${q.expr}</span>
+        <span class="q-h-eq">=</span>
+      </div>
+    `;
+    responseUnit.style.display = 'none';
+  } else if (q.type === 'sequence') {
+    const itemsHtml = q.items.map(it => it === '?' ? `<span class="q-seq-target">?</span>` : `<span>${it}</span>`).join(' , ');
+    qContent.innerHTML = `
+      <div class="q-puzzle-prompt">Fill in the missing number:</div>
+      <div class="q-seq-items">${itemsHtml}</div>
+    `;
+    responseUnit.style.display = 'none';
+  } else if (q.type === 'clock') {
+    qContent.innerHTML = `
+      <svg viewBox="0 0 100 100" class="q-clock-svg">
+        <circle cx="50" cy="50" r="45" fill="#fff" stroke="#1d2440" stroke-width="4"/>
+        <use href="#dial-markers" />
+        <use href="#minute-hand" />
+        <use href="#hour-hand" transform="rotate(${q.rot} 50 50)" />
+        <use href="#center-pin" />
+      </svg>
+      <div class="q-prompt-text">What time is it?</div>
+    `;
+    responseUnit.textContent = "'o' clock";
+    responseUnit.style.display = 'inline';
+  } else if (q.type === 'shape') {
+    qContent.innerHTML = `
+      <svg viewBox="0 0 100 100" class="q-shape-svg">
+        <polygon points="${q.points}" fill="${q.fill}" stroke="#1d2440" stroke-width="3.5" stroke-linejoin="round"/>
+      </svg>
+      <div class="q-prompt-text">How many sides?</div>
+    `;
+    responseUnit.textContent = "sides";
+    responseUnit.style.display = 'inline';
+  } else if (q.type === 'choice') {
+    const chipsHtml = q.list.map(n => `<span class="q-chip">${n}</span>`).join('');
+    qContent.innerHTML = `
+      <div class="q-puzzle-prompt">${q.prompt}</div>
+      <div class="q-number-chips">${chipsHtml}</div>
+    `;
+    responseUnit.style.display = 'none';
+  }
+}
+
+function handleDigit(d) {
+  if (isAnsweringLocked || over) return;
+  if (currentInput.length >= 3) return;
+  if (currentInput === '0' && d !== '0') {
+    currentInput = d;
+  } else if (currentInput === '0' && d === '0') {
+    return;
+  } else {
+    currentInput += d;
+  }
+  responseText.textContent = currentInput;
+  responseText.classList.remove('placeholder');
+  checkBtn.disabled = false;
+}
+
+function handleBackspace() {
+  if (isAnsweringLocked || over) return;
+  if (currentInput.length > 0) {
+    currentInput = currentInput.slice(0, -1);
+  }
+  if (currentInput.length === 0) {
+    responseText.textContent = '?';
+    responseText.classList.add('placeholder');
+    checkBtn.disabled = true;
+  } else {
+    responseText.textContent = currentInput;
+    responseText.classList.remove('placeholder');
+    checkBtn.disabled = false;
+  }
+}
+
+function handleClear() {
+  if (isAnsweringLocked || over) return;
+  currentInput = '';
+  responseText.textContent = '?';
+  responseText.classList.add('placeholder');
+  checkBtn.disabled = true;
+}
+
+function checkAnswer() {
+  if (isAnsweringLocked || currentInput === '' || over) return;
+  const userVal = parseInt(currentInput, 10);
+  if (isNaN(userVal)) return;
+
+  isAnsweringLocked = true;
+  checkBtn.disabled = true;
+
+  const isCorrect = (userVal === currentQuestion.ans);
+  if (isCorrect) {
+    resultMark.innerHTML = '<span class="tick">✔</span>';
+    responseBox.classList.add('correct');
+    score++;
+    tasks.push('add');
+    if (score >= MAX) {
+      tasks.push('win');
+    }
+    ui(true);
+  } else {
+    resultMark.innerHTML = '<span class="cross">✖</span>';
+    responseBox.classList.add('wrong');
+    if (score > 0) {
+      score--;
+      tasks.push('remove');
+    } else {
+      tasks.push('miss');
+    }
+    ui(true);
+  }
+}
+
+// On-screen keypad event bindings
+document.querySelectorAll('.key-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const key = btn.dataset.key;
+    if (key === 'clear') handleClear();
+    else if (key === 'backspace') handleBackspace();
+    else if (key !== undefined) handleDigit(key);
+  });
+});
+
+checkBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  checkAnswer();
+});
+
+// Keyboard support
+window.addEventListener('keydown', (e) => {
+  if (over || isAnsweringLocked) return;
+  if (e.key >= '0' && e.key <= '9') {
+    handleDigit(e.key);
+  } else if (e.key === 'Backspace') {
+    handleBackspace();
+  } else if (e.key === 'Escape') {
+    handleClear();
+  } else if (e.key === 'Enter') {
+    if (!checkBtn.disabled) checkAnswer();
+  }
+});
+
+/* ============================================================
+   3. BRICK STACK KING GAME ENGINE & CANVAS ANIMATIONS
+   ============================================================ */
 const INK = '#1d2440', INK2 = '#7b819a';
 const COLORS = ['#c8553d', '#d2694a', '#b9472f', '#dd7a55', '#c4603f', '#a94a34'];
 const BASE = 4, MAX = 10;
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-/* ---------- state ---------- */
 const L = {};
 let T = 0, last = 0, score = 0, over = false, wob = 0;
 let stack = [], fliers = [], bg = [], parts = [], tasks = [];
@@ -148,12 +793,12 @@ function layout() {
   L.W = window.innerWidth; L.H = window.innerHeight;
   cv.width = Math.round(L.W * dpr); cv.height = Math.round(L.H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  L.ph = L.H / 6;                 // bottom panel height
-  L.rw = L.W / 4;                 // right panel width
-  L.ground = L.H - L.ph * 0.14;   // where the man's feet go
-  L.baseY = L.H - L.ph - 2;       // floor of the right panel
+  L.ph = L.H / 6;
+  L.rw = L.W / 4;
+  L.ground = L.H - L.ph * 0.14;
+  L.baseY = L.H - L.ph - 2;
   L.stackX = L.W - L.rw / 2;
-  L.mh = L.ph * 0.62;            // man height
+  L.mh = L.ph * 0.62;
   L.u = L.mh / 100;
   L.bh = L.H * 0.04;
   L.bw = Math.min(L.bh * 2.2, L.rw * 0.42);
@@ -164,7 +809,6 @@ function layout() {
   L.maxX = L.W - L.mh * 0.6;
 }
 
-/* ---------- bricks ---------- */
 function newBrick(i, color) {
   const side = i % 2 ? 1 : -1;
   return { dx: side * rand(0.04, 0.2), rot: rand(-0.07, 0.07), color: color || COLORS[Math.floor(Math.random() * COLORS.length)], drop: 0, v: 0 };
@@ -202,13 +846,12 @@ function drawPile() {
     drawBrick(L.pileX + dx * L.bw, L.ground - (row + 0.5) * L.bh, rot, COLORS[c], L.bw, L.bh, 2.5);
 }
 function drawStack() {
-  // soft shadow on the floor
   ctx.fillStyle = 'rgba(29,36,64,.14)';
   ctx.beginPath(); ctx.ellipse(L.stackX, L.baseY, L.bw * 0.85, L.bh * 0.16, 0, 0, 7); ctx.fill();
   stack.forEach((b, i) => { const p = brickPos(i, b); drawBrick(p.x, p.y, p.rot, b.color, L.bw, L.bh, 2.5); });
 }
 
-/* ---------- the little man ---------- */
+/* Skeleton & Man rendering */
 const limbPt = (from, a, len) => [from[0] + Math.sin(a) * len, from[1] + Math.cos(a) * len];
 function skel(p) {
   const hip = [0, -(42 - p.drop)];
@@ -272,7 +915,7 @@ function star(x, y, r, col) {
 }
 function drawMan() {
   const p = man.cur, u = L.u, S = skel(p);
-  if (!man.sitting) { // ground shadow
+  if (!man.sitting) {
     const hgt = clamp((L.ground - man.y) / (L.mh * 1.5), 0, 1);
     ctx.fillStyle = `rgba(29,36,64,${0.2 * (1 - hgt * 0.8)})`;
     ctx.beginPath(); ctx.ellipse(man.x, L.ground + 2, L.mh * 0.26 * (1 - hgt * 0.5), L.mh * 0.045, 0, 0, 7); ctx.fill();
@@ -288,20 +931,15 @@ function drawMan() {
     ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(4.5, 0, 8, 4.2, 0, 0, 7); ctx.fill();
     ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
   };
-  // far side
   limb(S.sh, S.re, S.rh, INK2);
   limb(S.hip, S.rk, S.rf, INK2); shoe(S.rf, p.rT - p.rK, '#b8402c');
-  // torso
   ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.beginPath(); ctx.moveTo(S.hip[0], S.hip[1]); ctx.lineTo(S.neck[0], S.neck[1]); ctx.stroke();
-  // carried brick
   if (man.carry) {
     const hx = (S.lh[0] + S.rh[0]) / 2, hy = Math.min(S.lh[1], S.rh[1]);
     drawBrick(hx, hy - L.bh / u / 2 - 1, 0.05 * Math.sin(T * 9), man.carry, L.bw / u, L.bh / u, 2.5 / u);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   }
-  // near leg
   limb(S.hip, S.lk, S.lf, INK); shoe(S.lf, p.lT - p.lK, '#e2503f');
-  // head
   ctx.save(); ctx.translate(S.head[0], S.head[1]); ctx.rotate(S.ha);
   ctx.lineWidth = 2; ctx.strokeStyle = INK;
   if (!man.crown) for (const k of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(k * 3, -12); ctx.quadraticCurveTo(k * 6 - 3, -20, k * 7 + 2, -19 - Math.abs(k)); ctx.stroke(); }
@@ -319,9 +957,7 @@ function drawMan() {
   }
   if (man.face === 'dizzy') for (let i = 0; i < 3; i++) { const a = T * 5 + i * 2.1; star(Math.cos(a) * 17, -19 + Math.sin(a) * 5, 4, '#f5b921'); }
   ctx.restore();
-  // near arm
   limb(S.sh, S.le, S.lh, INK);
-  // thought mark
   if (man.bubble) {
     ctx.save(); ctx.translate(S.head[0] + 18, S.head[1] - 20 + Math.sin(T * 4) * 2); ctx.scale(man.dir, 1);
     ctx.font = '800 24px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText(man.bubble, 0, 0); ctx.restore();
@@ -329,7 +965,7 @@ function drawMan() {
   ctx.restore();
 }
 
-/* ---------- particles ---------- */
+/* Particle system */
 function burst(x, y, n, type) {
   for (let i = 0; i < n; i++) {
     const a = rand(0, Math.PI * 2), s = rand(0.3, 1);
@@ -360,7 +996,7 @@ function drawParts() {
   }
 }
 
-/* ---------- little scripting kit (generators, one step per frame) ---------- */
+/* Scripting primitives */
 function spawn(g) { bg.push(g); }
 function* wait(d, fn) { let t = 0; while (t < d) { if (fn) fn(t, t / d); const dt = yield; t += dt; } if (fn) fn(d, 1); }
 function runPose(ph, carry) {
@@ -391,7 +1027,7 @@ function* moveTo(x, spd, style) {
   man.y = L.ground;
 }
 
-/* ---------- idle antics (all inside the bottom strip) ---------- */
+/* Idle antics */
 function farX() {
   let x; let n = 0;
   do { x = rand(L.minX, L.maxX); } while (Math.abs(x - man.x) < L.W * 0.18 && ++n < 20);
@@ -425,7 +1061,7 @@ function* trip() {
   yield* wait(1.0, t => setT({ rot: -1.5, lA: 2.7, rA: 2.95, lE: 0.1, rE: 0.1, lT: -0.15, rT: 0.2 + 0.25 * Math.sin(t * 13), rK: 0.3 }));
   yield* wait(0.4, () => setT({ ...crouch(15), lean: 0.5, lA: 0.6, rA: 0.4 }));
   man.face = 'ouch';
-  yield* wait(0.7, t => setT({ lA: 0.5 + 0.5 * Math.sin(t * 18), lE: 0.6, rA: -0.3 + 0.4 * Math.cos(t * 18), rE: 0.6 })); // dusting off
+  yield* wait(0.7, t => setT({ lA: 0.5 + 0.5 * Math.sin(t * 18), lE: 0.6, rA: -0.3 + 0.4 * Math.cos(t * 18), rE: 0.6 }));
 }
 function* tightrope() {
   man.face = 'focus';
@@ -459,7 +1095,7 @@ function* recover() {
   yield* wait(0.12, (t, p) => { man.y = y0 + (L.ground - y0) * p; setT({}); });
 }
 
-/* ---------- tick: fetch a brick and put it on the tower ---------- */
+/* Tick (correct response): deliver brick to the tower */
 function* placeBrick(from, color) {
   const i = stack.length, b = newBrick(i, color);
   const f = { x: from.x, y: from.y, rot: 0, color }; fliers.push(f);
@@ -498,7 +1134,7 @@ function* deliver() {
   man.face = 'normal';
 }
 
-/* ---------- cross: a brick pops out of the tower and bonks him ---------- */
+/* Cross (wrong response): brick ricochets and knocks man */
 function* ricochet(f) {
   const sx = f.x, sy = f.y, r0 = f.rot, tx = L.pileX, ty = L.ground - L.bh * 2.2;
   yield* wait(0.8, (t, p) => { f.x = sx + (tx - sx) * p; f.y = sy + (ty - sy) * p - L.mh * 0.7 * 4 * p * (1 - p); f.rot = r0 + t * 9; });
@@ -526,7 +1162,6 @@ function* knock() {
   yield* wait(0.45, (t, p) => { f.x = bx + (hx - bx) * p; f.y = gy + (hy - gy) * p - L.mh * 0.45 * 4 * p * (1 - p); f.rot = r1 - t * 8; shiver(t); });
   burst(hx, hy, 7, 'star');
   spawn(ricochet(f));
-  // down he goes
   man.face = 'dizzy';
   const flat = { rot: 1.57, lA: -2.4, rA: -2.0, lE: -0.2, rE: -0.2, lT: 0.5, rT: 0.9, lK: 0.3, rK: 0.6 };
   yield* wait(0.45, () => setT(flat));
@@ -538,7 +1173,19 @@ function* knock() {
   man.face = 'normal';
 }
 
-/* ---------- ten bricks: up he goes, crown on ---------- */
+/* Miss (wrong answer when score is already 0): puzzled reaction */
+function* miss() {
+  man.bubble = '?';
+  man.face = 'hmm';
+  yield* wait(0.3, () => setT({ tilt: 0.35, lean: -0.15, lA: 2.5, lE: 1.1, rA: -0.6, rE: 1.4 }));
+  man.face = 'dizzy';
+  yield* wait(0.9, t => setT({ tilt: 0.35 + 0.15 * Math.sin(t * 16), lA: 2.5, lE: 1.1 + 0.15 * Math.sin(t * 18), rA: -0.6, rE: 1.4 }));
+  man.bubble = null;
+  man.face = 'normal';
+  yield* wait(0.2, () => setT({}));
+}
+
+/* Win: 10 bricks reached */
 function sitPos() {
   const i = stack.length - 1, p = brickPos(i, stack[i]);
   return { x: p.x - L.bw / 2 + 10 * L.u, y: p.y - L.bh / 2 + 42 * L.u };
@@ -574,13 +1221,21 @@ function* win() {
   }
 }
 
-/* ---------- brain: jobs first, antics otherwise ---------- */
+/* Brain loop */
 function* brain() {
   let dt = 0;
   while (true) {
     if (tasks.length) {
       const k = tasks.shift();
-      yield* (k === 'add' ? deliver() : k === 'remove' ? knock() : win());
+      if (k === 'add') yield* deliver();
+      else if (k === 'remove') yield* knock();
+      else if (k === 'miss') yield* miss();
+      else if (k === 'win') yield* win();
+
+      if (tasks.length === 0 && !over) {
+        // Serve next question when response animation is fully completed
+        nextQuestion();
+      }
       continue;
     }
     const g = idle();
@@ -592,30 +1247,24 @@ function* brain() {
   }
 }
 
-/* ---------- UI ---------- */
-const numEl = $('num'), pipsEl = $('pips'), okBtn = $('ok'), noBtn = $('no'), overEl = $('over');
+/* UI updates */
 const pips = [];
-for (let i = 0; i < MAX; i++) { const s = document.createElement('span'); pipsEl.appendChild(s); pips.push(s); }
+for (let i = 0; i < MAX; i++) {
+  const s = document.createElement('span');
+  pipsEl.appendChild(s);
+  pips.push(s);
+}
 function ui(pop) {
   numEl.textContent = score;
   pips.forEach((s, i) => s.classList.toggle('on', i < score));
-  const locked = score >= MAX;
-  okBtn.disabled = locked; noBtn.disabled = locked;
   overEl.hidden = !over;
-  if (pop) { numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop'); }
+  if (pop) {
+    numEl.classList.remove('pop');
+    void numEl.offsetWidth;
+    numEl.classList.add('pop');
+  }
 }
-okBtn.addEventListener('click', () => {
-  if (score >= MAX) return;
-  score++; tasks.push('add');
-  if (score === MAX) tasks.push('win');
-  ui(true);
-});
-noBtn.addEventListener('click', () => {
-  if (score >= MAX) return;
-  if (score <= 0) { noBtn.classList.remove('shake'); void noBtn.offsetWidth; noBtn.classList.add('shake'); return; }
-  score--; tasks.push('remove');
-  ui(true);
-});
+
 $('again').addEventListener('click', reset);
 
 function reset() {
@@ -625,17 +1274,17 @@ function reset() {
   man.cur = { ...BASE_POSE }; man.tgt = { ...BASE_POSE };
   man.script = brain();
   ui();
+  questionPool = [];
+  nextQuestion();
 }
 
-/* ---------- main loop ---------- */
+/* Main animation loop */
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now; T += dt;
   man.script.next(dt);
   bg = bg.filter(g => !g.next(dt).done);
-  // ease pose toward target
   const k = 1 - Math.exp(-dt * 24), kr = 1 - Math.exp(-dt * 10);
   for (const key in man.cur) man.cur[key] += (man.tgt[key] - man.cur[key]) * (key === 'rot' ? kr : k);
-  // bricks settling after one is pulled out
   for (const b of stack) if (b.drop < 0 || b.v) {
     b.v += 34 * dt; b.drop += b.v * dt;
     if (b.drop >= 0) { b.drop = 0; b.v = Math.abs(b.v) > 2 ? -b.v * 0.3 : 0; }
@@ -656,8 +1305,9 @@ window.addEventListener('resize', () => {
   layout();
   if (!man.sitting) { man.x = clamp(man.x, L.mh * 0.5, L.W - L.mh * 0.5); man.y = Math.min(man.y, L.ground); }
 });
-layout(); reset();
-window.__game = { get state() { return { score, over, bricks: stack.length, tasks: tasks.length, x: man.x, y: man.y }; } };
+
+layout();
+reset();
 requestAnimationFrame(frame);
 })();
 </script>
