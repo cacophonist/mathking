@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brick Stack King</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: three flat panels on a building-site day. Left = controls (3/4 wide),
+   right = brick tower (1/4 wide), bottom = the little man's strip (1/6 tall).
+   One canvas floats over everything so he can cross between panels. */
+:root{
+  color-scheme: light;
+  --ink:#1d2440;
+  --chalk:#eef1f6;
+  --sky:#cfe4f7;
+  --sand:#f6d77a;
+  --sand-deep:#d9a93f;
+  --go:#2fa66a;
+  --stop:#e2503f;
+  --gold:#f5b921;
+  --font-display:"Baloo 2","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  display:grid;
+  grid-template-columns:minmax(0,3fr) minmax(0,1fr);
+  grid-template-rows:minmax(0,5fr) minmax(0,1fr);
+  background:var(--chalk);color:var(--ink);
+  font-family:var(--font-body);
+  user-select:none;-webkit-user-select:none;
+}
+#left{
+  grid-area:1/1;position:relative;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(29,36,64,.13) 1.2px, transparent 1.6px) 0 0/26px 26px,
+    var(--chalk);
+}
+#right{
+  grid-area:1/2;position:relative;
+  border-left:3px solid var(--ink);
+  background:linear-gradient(to bottom,var(--sky) 0%,#e6f1fb 78%,#f3f7fb 100%);
+}
+#bottom{
+  grid-area:2/1/3/3;
+  border-top:3px solid var(--ink);
+  background:linear-gradient(to bottom,var(--sand) 0 86%,var(--sand-deep) 86% 100%);
+}
+#stage{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+
+.score{position:absolute;top:4.5vh;left:5vh;display:flex;flex-direction:column;gap:1vh}
+.score-label{font:700 2.4vh/1 var(--font-display);letter-spacing:.28em;opacity:.65}
+.score-row{display:flex;align-items:baseline;gap:1vh;font-family:var(--font-display);font-variant-numeric:tabular-nums}
+#num{font-weight:800;font-size:13vh;line-height:.85;display:inline-block;min-width:1ch}
+#num.pop{animation:pop .35s ease-out}
+.score-max{font-weight:700;font-size:4vh;opacity:.5}
+#pips{display:flex;gap:.7vh}
+#pips span{width:3.1vh;height:1.5vh;border:2px solid var(--ink);border-radius:.4vh;background:transparent;transition:background .2s,transform .2s}
+#pips span.on{background:#c8553d;transform:translateY(-.3vh)}
+
+.controls{position:absolute;left:50%;bottom:8vh;transform:translateX(-50%);display:flex;gap:6vh}
+.btn{
+  width:17vh;height:17vh;border-radius:30%;
+  border:3px solid var(--ink);cursor:pointer;
+  display:grid;place-items:center;
+  box-shadow:0 1.2vh 0 var(--ink);
+  transition:transform .06s,box-shadow .06s,filter .2s;
+}
+.btn svg{width:56%;height:56%}
+.btn:active:not(:disabled){transform:translateY(.9vh);box-shadow:0 .3vh 0 var(--ink)}
+.btn:focus-visible{outline:4px solid var(--gold);outline-offset:4px}
+.btn:disabled{filter:grayscale(.8) opacity(.45);cursor:default}
+#ok{background:var(--go)}
+#no{background:var(--stop)}
+.btn.shake{animation:shake .35s}
+
+#over{
+  position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+  text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5vh;
+  background:#fff;border:3px solid var(--ink);border-radius:3vh;
+  padding:3.5vh 6vh;box-shadow:0 1.2vh 0 var(--ink);
+}
+#over[hidden]{display:none}
+#over h1{font:800 8vh/1 var(--font-display);text-wrap:balance}
+#over p{font-size:2.8vh;font-weight:500}
+#again{
+  font:700 2.8vh/1 var(--font-display);color:var(--ink);
+  background:var(--gold);border:3px solid var(--ink);border-radius:99px;
+  padding:1.4vh 3.5vh;cursor:pointer;box-shadow:0 .6vh 0 var(--ink);margin-top:.5vh;
+}
+#again:active{transform:translateY(.4vh);box-shadow:0 .2vh 0 var(--ink)}
+#again:focus-visible{outline:4px solid var(--go);outline-offset:3px}
+
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-4deg)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{translate:0}20%{translate:-1vh}40%{translate:1vh}60%{translate:-.7vh}80%{translate:.7vh}}
+</style>
+</head>
+<body>
+  <section id="left" aria-label="Controls">
+    <div class="score" aria-live="polite">
+      <div class="score-label">SCORE</div>
+      <div class="score-row"><span id="num">0</span><span class="score-max">/ 10</span></div>
+      <div id="pips" aria-hidden="true"></div>
+    </div>
+
+    <div id="over" hidden>
+      <h1>Game over</h1>
+      <p>Ten bricks up. Long live the king of the pile.</p>
+      <button id="again" type="button">Play again</button>
+    </div>
+
+    <div class="controls">
+      <button id="ok" class="btn" type="button" aria-label="Tick: add a brick, score plus one">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 26l10 10L39 13"></path></svg>
+      </button>
+      <button id="no" class="btn" type="button" aria-label="Cross: knock a brick out, score minus one">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" aria-hidden="true"><path d="M12 12l24 24M36 12L12 36"></path></svg>
+      </button>
+    </div>
+  </section>
+  <section id="right" aria-label="Brick tower"></section>
+  <section id="bottom" aria-label="The little man's strip"></section>
+  <canvas id="stage" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const cv = $('stage'), ctx = cv.getContext('2d');
+const INK = '#1d2440', INK2 = '#7b819a';
+const COLORS = ['#c8553d', '#d2694a', '#b9472f', '#dd7a55', '#c4603f', '#a94a34'];
+const BASE = 4, MAX = 10;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- state ---------- */
+const L = {};
+let T = 0, last = 0, score = 0, over = false, wob = 0;
+let stack = [], fliers = [], bg = [], parts = [], tasks = [];
+const BASE_POSE = { lT: 0, lK: 0, rT: 0, rK: 0, lA: 0.12, lE: 0.15, rA: -0.12, rE: 0.15, lean: 0, tilt: 0, rot: 0, drop: 0 };
+const man = { x: 0, y: 0, dir: 1, cur: { ...BASE_POSE }, tgt: { ...BASE_POSE }, face: 'normal', carry: null, bubble: null, crown: null, sitting: false, script: null };
+
+function layout() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  L.W = window.innerWidth; L.H = window.innerHeight;
+  cv.width = Math.round(L.W * dpr); cv.height = Math.round(L.H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  L.ph = L.H / 6;                 // bottom panel height
+  L.rw = L.W / 4;                 // right panel width
+  L.ground = L.H - L.ph * 0.14;   // where the man's feet go
+  L.baseY = L.H - L.ph - 2;       // floor of the right panel
+  L.stackX = L.W - L.rw / 2;
+  L.mh = L.ph * 0.62;            // man height
+  L.u = L.mh / 100;
+  L.bh = L.H * 0.04;
+  L.bw = Math.min(L.bh * 2.2, L.rw * 0.42);
+  L.pileX = L.bw * 1.75 + 12;
+  L.pileR = L.pileX + L.bw * 1.6;
+  L.jumpX = L.stackX - L.bw * 0.95;
+  L.minX = L.pileR + L.mh * 0.6;
+  L.maxX = L.W - L.mh * 0.6;
+}
+
+/* ---------- bricks ---------- */
+function newBrick(i, color) {
+  const side = i % 2 ? 1 : -1;
+  return { dx: side * rand(0.04, 0.2), rot: rand(-0.07, 0.07), color: color || COLORS[Math.floor(Math.random() * COLORS.length)], drop: 0, v: 0 };
+}
+function sway() { return 0.034 * Math.sin(T * 0.9) + 0.012 * Math.sin(T * 2.1 + 1) + wob * 0.05 * Math.sin(T * 10); }
+function brickPos(i, b) {
+  const th = sway(), k = 0.4 + i * 0.06;
+  return {
+    x: L.stackX + (b ? b.dx * L.bw : 0) + th * (i + 0.5) * L.bh * k,
+    y: L.baseY - (i + 0.5) * L.bh + (b ? b.drop * L.bh : 0),
+    rot: (b ? b.rot : 0) + th * (0.4 + i * 0.07)
+  };
+}
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function drawBrick(x, y, rot, color, w, h, lw) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  rr(-w / 2, -h / 2, w, h, h * 0.16);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  ctx.fillRect(-w / 2 + lw, -h / 2 + lw, w - lw * 2, h * 0.2);
+  ctx.fillStyle = 'rgba(0,0,0,.2)';
+  ctx.beginPath(); ctx.ellipse(-w * 0.2, h * 0.08, w * 0.07, h * 0.16, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(w * 0.2, h * 0.08, w * 0.07, h * 0.16, 0, 0, 7); ctx.fill();
+  rr(-w / 2, -h / 2, w, h, h * 0.16);
+  ctx.lineWidth = lw; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.restore();
+}
+const PILE = [[-1.04, 0, 0.02, 0], [0, 0, -0.03, 2], [1.03, 0, 0.04, 1], [-0.52, 1, -0.05, 3], [0.56, 1, 0.06, 4], [0.05, 2, -0.12, 5]];
+function drawPile() {
+  for (const [dx, row, rot, c] of PILE)
+    drawBrick(L.pileX + dx * L.bw, L.ground - (row + 0.5) * L.bh, rot, COLORS[c], L.bw, L.bh, 2.5);
+}
+function drawStack() {
+  // soft shadow on the floor
+  ctx.fillStyle = 'rgba(29,36,64,.14)';
+  ctx.beginPath(); ctx.ellipse(L.stackX, L.baseY, L.bw * 0.85, L.bh * 0.16, 0, 0, 7); ctx.fill();
+  stack.forEach((b, i) => { const p = brickPos(i, b); drawBrick(p.x, p.y, p.rot, b.color, L.bw, L.bh, 2.5); });
+}
+
+/* ---------- the little man ---------- */
+const limbPt = (from, a, len) => [from[0] + Math.sin(a) * len, from[1] + Math.cos(a) * len];
+function skel(p) {
+  const hip = [0, -(42 - p.drop)];
+  const lk = limbPt(hip, p.lT, 21), lf = limbPt(lk, p.lT - p.lK, 21);
+  const rk = limbPt(hip, p.rT, 21), rf = limbPt(rk, p.rT - p.rK, 21);
+  const up = [Math.sin(p.lean), -Math.cos(p.lean)];
+  const sh = [hip[0] + up[0] * 26, hip[1] + up[1] * 26];
+  const neck = [hip[0] + up[0] * 30, hip[1] + up[1] * 30];
+  const ha = p.lean + p.tilt;
+  const head = [neck[0] + Math.sin(ha) * 13, neck[1] - Math.cos(ha) * 13];
+  const le = limbPt(sh, p.lA, 16), lh = limbPt(le, p.lA + p.lE, 16);
+  const re = limbPt(sh, p.rA, 16), rh = limbPt(re, p.rA + p.rE, 16);
+  return { hip, lk, lf, rk, rf, sh, neck, head, le, lh, re, rh, ha };
+}
+function crouch(d) { const a = Math.acos((42 - d) / 42); return { drop: d, lT: a, lK: 2 * a, rT: a, rK: 2 * a }; }
+function setT(o) { man.tgt = Object.assign({}, BASE_POSE, o); }
+function handWorld() {
+  const S = skel(man.cur);
+  return { x: man.x + man.dir * (S.lh[0] + S.rh[0]) / 2 * L.u, y: man.y + Math.min(S.lh[1], S.rh[1]) * L.u - L.bh / 2 };
+}
+
+function drawFace(face) {
+  const eye = (x, y, r, pr, ox, oy) => {
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x + ox, y + oy, pr, 0, 7); ctx.fill();
+  };
+  const seg = (...pts) => { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.stroke(); };
+  ctx.lineWidth = 1.8; ctx.strokeStyle = INK; ctx.lineCap = 'round';
+  const e1 = [2.5, -3], e2 = [9, -3.4];
+  if (face === 'dizzy') {
+    for (const [x, y] of [e1, e2]) { seg(x - 2.2, y - 2.2, x + 2.2, y + 2.2); seg(x - 2.2, y + 2.2, x + 2.2, y - 2.2); }
+    ctx.beginPath(); ctx.moveTo(1, 6);
+    ctx.quadraticCurveTo(3, 3.5, 5, 6); ctx.quadraticCurveTo(7, 8.5, 9, 6); ctx.stroke();
+  } else if (face === 'ouch') {
+    seg(e1[0] - 2, e1[1] - 2, e1[0] + 1.6, e1[1], e1[0] - 2, e1[1] + 2);
+    seg(e2[0] + 2, e2[1] - 2, e2[0] - 1.6, e2[1], e2[0] + 2, e2[1] + 2);
+    ctx.beginPath(); ctx.arc(5.5, 9.5, 3.6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  } else if (face === 'happy') {
+    for (const [x, y] of [e1, e2]) { ctx.beginPath(); ctx.arc(x, y + 1, 2.6, Math.PI, Math.PI * 2); ctx.stroke(); }
+    ctx.fillStyle = '#7a2230'; ctx.beginPath(); ctx.arc(5.5, 3.6, 5, 0, Math.PI); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if (face === 'scared') {
+    eye(e1[0], e1[1], 4, 1, 0.4, -0.6); eye(e2[0], e2[1], 4.3, 1, 0.4, -0.6);
+    ctx.fillStyle = '#7a2230'; ctx.beginPath(); ctx.ellipse(5.5, 6.5, 2.4, 3.2, 0, 0, 7); ctx.fill();
+  } else if (face === 'hmm') {
+    eye(e1[0], e1[1], 3.2, 1.4, 0.6, -1.2); eye(e2[0], e2[1], 3.5, 1.5, 0.6, -1.2);
+    ctx.lineWidth = 1.8; seg(6, -9.5, 12, -8); seg(3, 6.5, 9, 5.5);
+  } else if (face === 'focus') {
+    eye(e1[0], e1[1], 3.2, 1.4, 0.5, 1.2); eye(e2[0], e2[1], 3.5, 1.5, 0.5, 1.2);
+    ctx.lineWidth = 1.8; seg(2.5, 6, 8.5, 6);
+    ctx.fillStyle = '#f08a9b'; ctx.beginPath(); ctx.arc(7.5, 7.6, 2, 0, Math.PI); ctx.fill(); ctx.stroke();
+  } else {
+    eye(e1[0], e1[1], 3.2, 1.4, 0.8, 0.3); eye(e2[0], e2[1], 3.5, 1.5, 0.8, 0.3);
+    ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(5, 3.5, 5, Math.PI * 0.15, Math.PI * 0.8); ctx.stroke();
+  }
+}
+function star(x, y, r, col) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, q = i % 2 ? r * 0.45 : r; ctx.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); }
+  ctx.closePath(); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = Math.max(0.8, r * 0.12); ctx.strokeStyle = INK; ctx.stroke();
+}
+function drawMan() {
+  const p = man.cur, u = L.u, S = skel(p);
+  if (!man.sitting) { // ground shadow
+    const hgt = clamp((L.ground - man.y) / (L.mh * 1.5), 0, 1);
+    ctx.fillStyle = `rgba(29,36,64,${0.2 * (1 - hgt * 0.8)})`;
+    ctx.beginPath(); ctx.ellipse(man.x, L.ground + 2, L.mh * 0.26 * (1 - hgt * 0.5), L.mh * 0.045, 0, 0, 7); ctx.fill();
+  }
+  ctx.save();
+  ctx.translate(man.x, man.y - Math.abs(Math.sin(p.rot)) * 9 * u);
+  ctx.scale(man.dir * u, u);
+  ctx.rotate(-p.rot);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const limb = (a, b, c, col) => { ctx.lineWidth = 5.5; ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); };
+  const shoe = (f, a, col) => {
+    ctx.save(); ctx.translate(f[0], f[1]); ctx.rotate(-a);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(4.5, 0, 8, 4.2, 0, 0, 7); ctx.fill();
+    ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
+  };
+  // far side
+  limb(S.sh, S.re, S.rh, INK2);
+  limb(S.hip, S.rk, S.rf, INK2); shoe(S.rf, p.rT - p.rK, '#b8402c');
+  // torso
+  ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.beginPath(); ctx.moveTo(S.hip[0], S.hip[1]); ctx.lineTo(S.neck[0], S.neck[1]); ctx.stroke();
+  // carried brick
+  if (man.carry) {
+    const hx = (S.lh[0] + S.rh[0]) / 2, hy = Math.min(S.lh[1], S.rh[1]);
+    drawBrick(hx, hy - L.bh / u / 2 - 1, 0.05 * Math.sin(T * 9), man.carry, L.bw / u, L.bh / u, 2.5 / u);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  }
+  // near leg
+  limb(S.hip, S.lk, S.lf, INK); shoe(S.lf, p.lT - p.lK, '#e2503f');
+  // head
+  ctx.save(); ctx.translate(S.head[0], S.head[1]); ctx.rotate(S.ha);
+  ctx.lineWidth = 2; ctx.strokeStyle = INK;
+  if (!man.crown) for (const k of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(k * 3, -12); ctx.quadraticCurveTo(k * 6 - 3, -20, k * 7 + 2, -19 - Math.abs(k)); ctx.stroke(); }
+  ctx.fillStyle = '#ffd9a8'; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill(); ctx.lineWidth = 2.6; ctx.stroke();
+  drawFace(man.face);
+  ctx.fillStyle = '#e2503f'; ctx.beginPath(); ctx.arc(13, 1.5, 4.3, 0, 7); ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke();
+  if (man.crown) {
+    ctx.save(); ctx.translate(0, -man.crown.dy); ctx.rotate(-0.12);
+    ctx.beginPath();
+    [[-10, -9], [-12, -22], [-5, -16], [0, -25], [5, -16], [12, -22], [10, -9]].forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.closePath(); ctx.fillStyle = '#f5b921'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.fillStyle = '#e2503f'; for (const [x, y] of [[-12, -22], [0, -25], [12, -22]]) { ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill(); ctx.stroke(); }
+    ctx.fillStyle = '#2fa66a'; ctx.beginPath(); ctx.arc(0, -13, 2.2, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+  if (man.face === 'dizzy') for (let i = 0; i < 3; i++) { const a = T * 5 + i * 2.1; star(Math.cos(a) * 17, -19 + Math.sin(a) * 5, 4, '#f5b921'); }
+  ctx.restore();
+  // near arm
+  limb(S.sh, S.le, S.lh, INK);
+  // thought mark
+  if (man.bubble) {
+    ctx.save(); ctx.translate(S.head[0] + 18, S.head[1] - 20 + Math.sin(T * 4) * 2); ctx.scale(man.dir, 1);
+    ctx.font = '800 24px "Baloo 2", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText(man.bubble, 0, 0); ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* ---------- particles ---------- */
+function burst(x, y, n, type) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, Math.PI * 2), s = rand(0.3, 1);
+    if (type === 'star') parts.push({ type, x, y, vx: Math.cos(a) * 260 * s, vy: Math.sin(a) * 260 * s - 120, g: 500, life: 0, max: rand(0.5, 0.9), size: rand(5, 9), rot: 0, vr: rand(-6, 6), color: '#f5b921' });
+    else parts.push({ type: 'dust', x: x + rand(-8, 8), y, vx: Math.cos(a) * 60, vy: -Math.abs(Math.sin(a)) * 50, g: 0, life: 0, max: rand(0.3, 0.55), size: rand(4, 9), rot: 0, vr: 0, color: 'rgba(120,96,40,.45)' });
+  }
+}
+function* confetti() {
+  const cols = ['#e2503f', '#2fa66a', '#f5b921', '#3b82c4', '#c8553d', '#ffffff'];
+  let t = 0, acc = 0;
+  while (t < 6) {
+    const dt = yield; t += dt; acc += dt * 70;
+    while (acc > 1) { acc--; parts.push({ type: 'conf', x: rand(0, L.W), y: -10, vx: rand(-40, 40), vy: rand(60, 160), g: 120, life: 0, max: rand(3, 5), size: rand(6, 11), rot: rand(0, 6), vr: rand(-8, 8), color: cols[Math.floor(rand(0, cols.length))] }); }
+  }
+}
+function stepParts(dt) {
+  for (const p of parts) { p.life += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; }
+  parts = parts.filter(p => p.life < p.max && p.y < L.H + 20);
+}
+function drawParts() {
+  for (const p of parts) {
+    const k = 1 - p.life / p.max;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    if (p.type === 'star') { ctx.globalAlpha = Math.min(1, k * 2); star(0, 0, p.size, p.color); }
+    else if (p.type === 'dust') { ctx.globalAlpha = k; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0, 0, p.size * (1.4 - k * 0.6), 0, 7); ctx.fill(); }
+    else { ctx.globalAlpha = Math.min(1, k * 3); ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size * 0.3 * Math.cos(p.life * 9), p.size, p.size * 0.6 * Math.cos(p.life * 9)); }
+    ctx.restore();
+  }
+}
+
+/* ---------- little scripting kit (generators, one step per frame) ---------- */
+function spawn(g) { bg.push(g); }
+function* wait(d, fn) { let t = 0; while (t < d) { if (fn) fn(t, t / d); const dt = yield; t += dt; } if (fn) fn(d, 1); }
+function runPose(ph, carry) {
+  const s = Math.sin(ph), c = Math.cos(ph);
+  const o = { lT: s * 0.95, rT: -s * 0.95, lK: 0.25 + 0.95 * Math.max(0, c), rK: 0.25 + 0.95 * Math.max(0, -c), lA: -s, rA: s, lE: 1.3, rE: 1.3, lean: 0.22 };
+  if (carry) { o.lA = 2.9; o.rA = 3.1; o.lE = 0.15; o.rE = 0.1; o.lean = 0.1; }
+  return o;
+}
+function* moveTo(x, spd, style) {
+  x = clamp(x, L.mh * 0.5, L.W - L.mh * 0.5);
+  man.dir = x >= man.x ? 1 : -1;
+  let ph = 0, t = 0;
+  while (Math.abs(x - man.x) > 0.5) {
+    const dt = yield; t += dt;
+    const step = Math.min(Math.abs(x - man.x), spd * L.mh * dt);
+    man.x += man.dir * step;
+    if (style === 'rope') {
+      ph += step / L.mh * 12;
+      const w = 0.45 * Math.sin(t * 5) + 0.2 * Math.sin(t * 11.3);
+      setT({ lT: Math.sin(ph) * 0.4, rT: -Math.sin(ph) * 0.4, lK: 0.1, rK: 0.1, lA: 1.57 + w, rA: -1.57 + w, lE: 0, rE: 0, lean: w * 0.25, tilt: -w * 0.35 });
+      man.y = L.ground;
+    } else {
+      ph += step / L.mh * 7;
+      setT(runPose(ph, man.carry));
+      man.y = L.ground - Math.abs(Math.sin(ph)) * 0.045 * L.mh;
+    }
+  }
+  man.y = L.ground;
+}
+
+/* ---------- idle antics (all inside the bottom strip) ---------- */
+function farX() {
+  let x; let n = 0;
+  do { x = rand(L.minX, L.maxX); } while (Math.abs(x - man.x) < L.W * 0.18 && ++n < 20);
+  return x;
+}
+function* scratch() {
+  man.face = 'hmm'; man.bubble = '?';
+  yield* wait(2.4, t => setT({ lA: 2.5, lE: 1.05 + 0.3 * Math.sin(t * 22), rA: -0.6, rE: 1.5, tilt: 0.2, lean: -0.05 }));
+}
+function* dash() {
+  yield* moveTo(farX(), 5.5);
+  if (Math.random() < 0.5) yield* moveTo(farX(), 5.5);
+}
+function* hops() {
+  man.face = 'happy';
+  const n = 2 + Math.floor(rand(0, 3));
+  for (let i = 0; i < n; i++) {
+    yield* wait(0.16, () => setT({ ...crouch(11), lA: -0.8, rA: -1, lean: 0.2 }));
+    const h = L.ph * 0.2;
+    yield* wait(0.5, (t, p) => { man.y = L.ground - h * 4 * p * (1 - p); setT({ lA: 2.8, rA: 3.0, lT: 0.35, lK: 0.7, rT: -0.25, rK: 0.5 }); });
+    man.y = L.ground; burst(man.x, L.ground, 3, 'dust');
+    yield* wait(0.1, () => setT(crouch(8)));
+  }
+}
+function* trip() {
+  const mid = (L.minX + L.maxX) / 2, d = man.x < mid ? 1 : -1;
+  yield* moveTo(clamp(man.x + d * L.W * 0.14, L.minX + L.mh, L.maxX - L.mh), 5.5);
+  man.face = 'dizzy';
+  yield* wait(0.5, () => setT({ rot: -1.5, lA: 2.7, rA: 2.95, lE: 0.1, rE: 0.1, lT: -0.15, rT: 0.2 }));
+  burst(man.x + man.dir * L.mh * 0.8, L.ground, 5, 'dust');
+  yield* wait(1.0, t => setT({ rot: -1.5, lA: 2.7, rA: 2.95, lE: 0.1, rE: 0.1, lT: -0.15, rT: 0.2 + 0.25 * Math.sin(t * 13), rK: 0.3 }));
+  yield* wait(0.4, () => setT({ ...crouch(15), lean: 0.5, lA: 0.6, rA: 0.4 }));
+  man.face = 'ouch';
+  yield* wait(0.7, t => setT({ lA: 0.5 + 0.5 * Math.sin(t * 18), lE: 0.6, rA: -0.3 + 0.4 * Math.cos(t * 18), rE: 0.6 })); // dusting off
+}
+function* tightrope() {
+  man.face = 'focus';
+  const d = man.x < (L.minX + L.maxX) / 2 ? 1 : -1;
+  yield* moveTo(clamp(man.x + d * L.W * rand(0.15, 0.25), L.minX, L.maxX), 1.0, 'rope');
+}
+function* wave() {
+  man.face = 'happy';
+  yield* wait(1.6, t => setT({ lA: 2.7 + 0.35 * Math.sin(t * 13), lE: 0.25, rA: -0.5, rE: 1.4, tilt: 0.1 * Math.sin(t * 6) }));
+}
+function* dance() {
+  man.face = 'happy';
+  for (let i = 0; i < 8; i++) {
+    man.dir *= -1;
+    yield* wait(0.24, (t, p) => { man.y = L.ground - L.ph * 0.07 * 4 * p * (1 - p); setT({ lA: 2.5, lE: 0.5, rA: -2.5, rE: -0.5, lT: 0.55, lK: 0.35, rT: -0.55, rK: 0.35, tilt: 0.15 }); });
+  }
+  man.y = L.ground;
+}
+const IDLES = [scratch, dash, hops, trip, tightrope, wave, dance];
+let lastIdle = -1;
+function* idle() {
+  let i; do { i = Math.floor(Math.random() * IDLES.length); } while (i === lastIdle); lastIdle = i;
+  man.face = 'normal'; man.bubble = null;
+  yield* IDLES[i]();
+  man.face = 'normal'; man.bubble = null; man.y = L.ground;
+  yield* wait(rand(0.3, 0.8), () => setT({}));
+}
+function* recover() {
+  man.bubble = null; man.face = 'normal';
+  const y0 = man.y;
+  yield* wait(0.12, (t, p) => { man.y = y0 + (L.ground - y0) * p; setT({}); });
+}
+
+/* ---------- tick: fetch a brick and put it on the tower ---------- */
+function* placeBrick(from, color) {
+  const i = stack.length, b = newBrick(i, color);
+  const f = { x: from.x, y: from.y, rot: 0, color }; fliers.push(f);
+  yield* wait(0.28, (t, p) => {
+    const to = brickPos(i, b), e = p * p;
+    f.x = from.x + (to.x - from.x) * p; f.y = from.y + (to.y - from.y) * e - L.bh * 0.6 * 4 * p * (1 - p); f.rot = b.rot * p;
+  });
+  fliers.splice(fliers.indexOf(f), 1);
+  stack.push(b); wob = 1;
+}
+function* deliver() {
+  man.face = 'normal';
+  yield* moveTo(L.pileR + L.mh * 0.2, 8);
+  man.dir = -1;
+  yield* wait(0.22, () => setT({ ...crouch(9), lean: 1.1, lA: 0.5, rA: 0.7, lE: 0.2, rE: 0.2 }));
+  man.carry = COLORS[Math.floor(Math.random() * COLORS.length)];
+  yield* wait(0.18, () => setT({ lA: 2.9, rA: 3.1, lE: 0.15, rE: 0.1 }));
+  yield* moveTo(L.jumpX, 7.5);
+  man.dir = 1;
+  yield* wait(0.2, () => setT({ ...crouch(15), lA: 2.9, rA: 3.1, lE: 0.15, rE: 0.1 }));
+  const slot = brickPos(stack.length, null);
+  const apex = slot.y - L.bh * 0.4 + 100 * L.u;
+  const x0 = man.x;
+  let released = false;
+  burst(man.x, L.ground, 4, 'dust');
+  yield* wait(1.0, (t, p) => {
+    const a = 4 * p * (1 - p);
+    man.y = L.ground + (apex - L.ground) * a; man.x = x0 + L.bw * 0.3 * a;
+    setT(released ? { lA: 2.2, rA: 1.4, lE: 0.5, rE: 0.5, lT: 0.4, lK: 0.8, rT: -0.3, rK: 0.6 } : { lA: 2.9, rA: 3.1, lE: 0.15, rE: 0.1, lT: 0.3, lK: 0.7, rT: -0.2, rK: 0.5 });
+    if (!released && p >= 0.5) { released = true; const c = man.carry, h = handWorld(); man.carry = null; spawn(placeBrick(h, c)); }
+  });
+  man.y = L.ground; man.x = x0; burst(man.x, L.ground, 5, 'dust');
+  yield* wait(0.18, () => setT(crouch(15)));
+  man.face = 'happy';
+  yield* wait(0.45, () => setT({ lA: 2.8, lE: 0.3, rA: -0.4, rE: 1.2 }));
+  man.face = 'normal';
+}
+
+/* ---------- cross: a brick pops out of the tower and bonks him ---------- */
+function* ricochet(f) {
+  const sx = f.x, sy = f.y, r0 = f.rot, tx = L.pileX, ty = L.ground - L.bh * 2.2;
+  yield* wait(0.8, (t, p) => { f.x = sx + (tx - sx) * p; f.y = sy + (ty - sy) * p - L.mh * 0.7 * 4 * p * (1 - p); f.rot = r0 + t * 9; });
+  fliers.splice(fliers.indexOf(f), 1);
+  burst(tx, L.ground, 4, 'dust');
+}
+function* knock() {
+  man.bubble = null; man.face = 'scared';
+  const idx = Math.floor(stack.length / 2), b = stack[idx], p0 = brickPos(idx, b);
+  man.dir = p0.x >= man.x ? 1 : -1;
+  const shiver = t => setT({ tilt: -0.45, lean: -0.08, lA: 0.6 + 0.15 * Math.sin(t * 40), rA: -0.6 + 0.15 * Math.cos(t * 40), lE: 1.6, rE: 1.6, ...crouch(5) });
+  yield* wait(0.25, shiver);
+  stack.splice(idx, 1);
+  for (let j = idx; j < stack.length; j++) { stack[j].drop -= 1; stack[j].v = 0; }
+  wob = 0.9;
+  const f = { x: p0.x, y: p0.y, rot: p0.rot, color: b.color }; fliers.push(f);
+  yield* wait(0.3, (t, p) => { f.x = p0.x - (1 - Math.pow(1 - p, 3)) * L.bw * 1.2; shiver(t); });
+  const ax = f.x, ay = f.y, gy = L.ground - L.bh / 2;
+  let bx = man.x + (ax - man.x) * 0.5;
+  if (Math.abs(ax - man.x) < L.bw * 1.6) bx = man.x - L.bw * 1.7;
+  man.dir = bx >= man.x ? 1 : -1;
+  yield* wait(0.3 + 0.5 * Math.sqrt(Math.max(0, gy - ay) / L.H), (t, p) => { f.x = ax + (bx - ax) * p; f.y = ay + (gy - ay) * p * p; f.rot = p0.rot - t * 7; shiver(t); });
+  burst(bx, L.ground, 5, 'dust');
+  const hx = man.x, hy = L.ground - L.mh * 0.98, r1 = f.rot;
+  yield* wait(0.45, (t, p) => { f.x = bx + (hx - bx) * p; f.y = gy + (hy - gy) * p - L.mh * 0.45 * 4 * p * (1 - p); f.rot = r1 - t * 8; shiver(t); });
+  burst(hx, hy, 7, 'star');
+  spawn(ricochet(f));
+  // down he goes
+  man.face = 'dizzy';
+  const flat = { rot: 1.57, lA: -2.4, rA: -2.0, lE: -0.2, rE: -0.2, lT: 0.5, rT: 0.9, lK: 0.3, rK: 0.6 };
+  yield* wait(0.45, () => setT(flat));
+  burst(man.x - man.dir * L.mh * 0.6, L.ground, 5, 'dust');
+  yield* wait(1.0, t => setT({ ...flat, rT: 0.9 + 0.25 * Math.sin(t * 14) }));
+  man.face = 'ouch';
+  yield* wait(0.4, () => setT({ ...crouch(16), lean: 0.5, lA: 2.4, lE: 1.0, rA: 2.6, rE: 0.9 }));
+  yield* wait(1.3, t => setT({ lean: 0.15, tilt: 0.15 * Math.sin(t * 6), lA: 2.45, lE: 1.05 + 0.12 * Math.sin(t * 16), rA: 2.6, rE: 0.95 + 0.12 * Math.cos(t * 16) }));
+  man.face = 'normal';
+}
+
+/* ---------- ten bricks: up he goes, crown on ---------- */
+function sitPos() {
+  const i = stack.length - 1, p = brickPos(i, stack[i]);
+  return { x: p.x - L.bw / 2 + 10 * L.u, y: p.y - L.bh / 2 + 42 * L.u };
+}
+function* crownDrop() {
+  man.crown = { dy: 320 }; let v = 0;
+  while (true) {
+    const dt = yield; v -= 1800 * dt; man.crown.dy += v * dt;
+    if (man.crown.dy <= 0) { man.crown.dy = 0; v = -v * 0.35; if (v < 40) return; }
+  }
+}
+function* win() {
+  man.face = 'happy';
+  yield* moveTo(L.jumpX - L.mh * 2, 8);
+  yield* moveTo(L.jumpX, 8);
+  man.dir = 1;
+  yield* wait(0.25, () => setT({ ...crouch(17), lA: -0.9, rA: -1.1 }));
+  const x0 = man.x;
+  burst(man.x, L.ground, 6, 'dust');
+  yield* wait(1.15, (t, p) => {
+    const s = sitPos();
+    man.x = x0 + (s.x - x0) * p; man.y = L.ground + (s.y - L.ground) * p - L.H * 0.1 * 4 * p * (1 - p);
+    setT({ lA: 2.8, rA: 3.0, lT: 1.1, lK: 1.6, rT: 0.9, rK: 1.5 });
+  });
+  man.dir = -1; man.sitting = true; wob = 1.2;
+  spawn(crownDrop()); spawn(confetti());
+  over = true; ui();
+  let t = 0;
+  while (true) {
+    const dt = yield; t += dt;
+    const s = sitPos(); man.x = s.x; man.y = s.y;
+    setT({ lT: 1.5, rT: 1.45, lK: 1.5 + 0.35 * Math.sin(t * 4), rK: 1.5 + 0.35 * Math.sin(t * 4 + 2), lA: 2.7 + 0.25 * Math.sin(t * 5), lE: 0.25, rA: -0.5, rE: 0.9, lean: 0.05 * Math.sin(t * 2), tilt: 0.08 * Math.sin(t * 3) });
+  }
+}
+
+/* ---------- brain: jobs first, antics otherwise ---------- */
+function* brain() {
+  let dt = 0;
+  while (true) {
+    if (tasks.length) {
+      const k = tasks.shift();
+      yield* (k === 'add' ? deliver() : k === 'remove' ? knock() : win());
+      continue;
+    }
+    const g = idle();
+    while (true) {
+      if (tasks.length) { yield* recover(); break; }
+      if (g.next(dt).done) break;
+      dt = yield;
+    }
+  }
+}
+
+/* ---------- UI ---------- */
+const numEl = $('num'), pipsEl = $('pips'), okBtn = $('ok'), noBtn = $('no'), overEl = $('over');
+const pips = [];
+for (let i = 0; i < MAX; i++) { const s = document.createElement('span'); pipsEl.appendChild(s); pips.push(s); }
+function ui(pop) {
+  numEl.textContent = score;
+  pips.forEach((s, i) => s.classList.toggle('on', i < score));
+  const locked = score >= MAX;
+  okBtn.disabled = locked; noBtn.disabled = locked;
+  overEl.hidden = !over;
+  if (pop) { numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop'); }
+}
+okBtn.addEventListener('click', () => {
+  if (score >= MAX) return;
+  score++; tasks.push('add');
+  if (score === MAX) tasks.push('win');
+  ui(true);
+});
+noBtn.addEventListener('click', () => {
+  if (score >= MAX) return;
+  if (score <= 0) { noBtn.classList.remove('shake'); void noBtn.offsetWidth; noBtn.classList.add('shake'); return; }
+  score--; tasks.push('remove');
+  ui(true);
+});
+$('again').addEventListener('click', reset);
+
+function reset() {
+  score = 0; over = false; wob = 0; tasks = []; fliers = []; bg = []; parts = []; stack = [];
+  for (let i = 0; i < BASE; i++) stack.push(newBrick(i));
+  Object.assign(man, { x: L.W * 0.4, y: L.ground, dir: 1, face: 'normal', carry: null, bubble: null, crown: null, sitting: false });
+  man.cur = { ...BASE_POSE }; man.tgt = { ...BASE_POSE };
+  man.script = brain();
+  ui();
+}
+
+/* ---------- main loop ---------- */
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now; T += dt;
+  man.script.next(dt);
+  bg = bg.filter(g => !g.next(dt).done);
+  // ease pose toward target
+  const k = 1 - Math.exp(-dt * 24), kr = 1 - Math.exp(-dt * 10);
+  for (const key in man.cur) man.cur[key] += (man.tgt[key] - man.cur[key]) * (key === 'rot' ? kr : k);
+  // bricks settling after one is pulled out
+  for (const b of stack) if (b.drop < 0 || b.v) {
+    b.v += 34 * dt; b.drop += b.v * dt;
+    if (b.drop >= 0) { b.drop = 0; b.v = Math.abs(b.v) > 2 ? -b.v * 0.3 : 0; }
+  }
+  wob *= Math.exp(-dt * 2.2);
+  stepParts(dt);
+
+  ctx.clearRect(0, 0, L.W, L.H);
+  drawPile();
+  drawStack();
+  drawMan();
+  for (const f of fliers) drawBrick(f.x, f.y, f.rot, f.color, L.bw, L.bh, 2.5);
+  drawParts();
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize', () => {
+  layout();
+  if (!man.sitting) { man.x = clamp(man.x, L.mh * 0.5, L.W - L.mh * 0.5); man.y = Math.min(man.y, L.ground); }
+});
+layout(); reset();
+window.__game = { get state() { return { score, over, bricks: stack.length, tasks: tasks.length, x: man.x, y: man.y }; } };
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
